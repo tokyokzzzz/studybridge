@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import User, UniversitySubmission
+from .models import User, UniversitySubmission, ScholarshipSubmission
 
 _ctrl = 'form-control'
 _ctrl_lg = 'form-control form-control-lg'
@@ -96,3 +96,46 @@ class UniversitySubmissionForm(forms.ModelForm):
             if not photo.content_type.startswith('image/'):
                 raise forms.ValidationError('Please upload a valid image file.')
         return photo
+
+
+class ScholarshipSubmissionForm(forms.ModelForm):
+    class Meta:
+        model = ScholarshipSubmission
+        fields = [
+            'title', 'university_name', 'scholarship_type', 'coverage',
+            'stipend_amount', 'stipend_unknown', 'deadline', 'no_deadline',
+            'description', 'link',
+        ]
+        widgets = {
+            'title': forms.TextInput(attrs={'class': _ctrl, 'placeholder': 'e.g. Excellence Scholarship 2025'}),
+            'university_name': forms.TextInput(attrs={'class': _ctrl, 'readonly': True}),
+            'scholarship_type': forms.Select(attrs={'class': _ctrl}),
+            'coverage': forms.Select(attrs={'class': _ctrl}),
+            'stipend_amount': forms.NumberInput(attrs={
+                'class': _ctrl, 'placeholder': 'e.g. 5000', 'min': 0, 'step': '0.01'
+            }),
+            'stipend_unknown': forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'stipendUnknown'}),
+            'deadline': forms.DateInput(attrs={'class': _ctrl, 'type': 'date'}),
+            'no_deadline': forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'noDeadline'}),
+            'description': forms.Textarea(attrs={
+                'class': _ctrl, 'rows': 5,
+                'placeholder': 'Describe eligibility criteria, application process, and any other relevant details…'
+            }),
+            'link': forms.URLInput(attrs={'class': _ctrl, 'placeholder': 'https://scholarship-page.edu/apply'}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        stipend_unknown = cleaned.get('stipend_unknown')
+        stipend_amount = cleaned.get('stipend_amount')
+        no_deadline = cleaned.get('no_deadline')
+        deadline = cleaned.get('deadline')
+
+        if not stipend_unknown and stipend_amount is not None and stipend_amount < 0:
+            self.add_error('stipend_amount', 'Stipend amount must be a positive number.')
+
+        if not no_deadline and deadline is None:
+            # deadline is optional; only validate format if provided (handled by DateField itself)
+            pass
+
+        return cleaned

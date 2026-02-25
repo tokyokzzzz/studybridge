@@ -306,7 +306,7 @@
     <a href="{% url 'universities' %}" class="sidebar-link {% if active_page == 'universities' %}active{% endif %}"><i class="bi bi-building-fill"></i> Universities</a>
     <a href="#" class="sidebar-link"><i class="bi bi-map-fill"></i> Country Guides <span class="sb-badge soon">Soon</span></a>
     <a href="#" class="sidebar-link"><i class="bi bi-journal-richtext"></i> Forums <span class="sb-badge soon">Soon</span></a>
-    <a href="#" class="sidebar-link"><i class="bi bi-award-fill"></i> Scholarships <span class="sb-badge soon">Soon</span></a>
+    <a href="{% url 'scholarships' %}" class="sidebar-link {% if active_page == 'scholarships' %}active{% endif %}"><i class="bi bi-award-fill"></i> Scholarships</a>
 
     <div class="sidebar-section-label">Account</div>
     <a href="{% url 'edit_profile' %}" class="sidebar-link {% if active_page == 'profile' %}active{% endif %}"><i class="bi bi-person-fill"></i> My Profile</a>

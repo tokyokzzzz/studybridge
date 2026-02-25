@@ -1,0 +1,521 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Submit a Scholarship — StudyBridge{% endblock %}
+
+{% block extra_db_css %}
+<style>
+  .su-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: background .3s, border-color .3s;
+  }
+
+  .su-card-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 1.75rem;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+
+  .su-card-header h5 {
+    color: #fff;
+    font-weight: 700;
+    margin: 0;
+    font-size: 1.05rem;
+  }
+
+  .su-card-header p {
+    color: rgba(255,255,255,.6);
+    margin: .3rem 0 0;
+    font-size: .82rem;
+  }
+
+  .su-card-body {
+    padding: 1.75rem;
+  }
+
+  /* ── Section label ── */
+  .section-label {
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: #6366f1;
+    margin-bottom: .75rem;
+    padding-bottom: .35rem;
+    border-bottom: 2px solid rgba(99,102,241,.12);
+  }
+
+  /* ── Form controls ── */
+  .form-label {
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: .3rem;
+  }
+
+  .form-label .req {
+    color: #ef4444;
+    margin-left: .15rem;
+  }
+
+  .form-control, .form-select {
+    background: var(--input-bg);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: .6rem .85rem;
+    font-size: .875rem;
+    transition: border-color .2s, box-shadow .2s, background .3s;
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+    background: var(--input-bg);
+    color: var(--text-primary);
+  }
+
+  .form-control[readonly] {
+    opacity: .7;
+    cursor: not-allowed;
+  }
+
+  .form-control::placeholder { color: var(--text-muted); opacity: .7; }
+  textarea.form-control { resize: vertical; min-height: 130px; }
+
+  .char-counter {
+    font-size: .74rem;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: .2rem;
+  }
+  .char-counter.warn { color: #f59e0b; }
+  .char-counter.over  { color: #ef4444; }
+
+  /* ── Checkbox row ── */
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-top: .5rem;
+  }
+  .check-row label {
+    font-size: .82rem;
+    color: var(--text-secondary);
+    margin: 0;
+    cursor: pointer;
+  }
+
+  /* ── No-university gate ── */
+  .no-uni-gate {
+    background: linear-gradient(135deg, rgba(245,158,11,.08), rgba(239,68,68,.05));
+    border: 2px solid rgba(245,158,11,.35);
+    border-radius: 14px;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .no-uni-gate .gate-icon { font-size: 2.5rem; color: #f59e0b; margin-bottom: .75rem; }
+  .no-uni-gate h5 { color: var(--text-primary); font-weight: 700; margin-bottom: .4rem; }
+  .no-uni-gate p { color: var(--text-muted); font-size: .875rem; max-width: 400px; margin: 0 auto 1.1rem; }
+
+  /* ── Submit button ── */
+  .submit-btn {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none;
+    color: #fff;
+    padding: .75rem 2rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: .9rem;
+    transition: transform .15s, box-shadow .2s;
+  }
+
+  .submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99,102,241,.35);
+    color: #fff;
+  }
+
+  /* ── Submission history ── */
+  .history-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: .9rem 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: .85rem;
+    transition: background .3s;
+  }
+
+  .history-card + .history-card { margin-top: .5rem; }
+
+  .history-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .history-info h6 {
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 .15rem;
+  }
+
+  .history-info p {
+    font-size: .75rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .65rem;
+    border-radius: 100px;
+    font-size: .72rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  .status-pill.pending  { background: rgba(245,158,11,.15); color: #d97706; border: 1px solid rgba(245,158,11,.3); }
+  .status-pill.approved { background: rgba(16,185,129,.15); color: #059669; border: 1px solid rgba(16,185,129,.3); }
+  .status-pill.rejected { background: rgba(239,68,68,.15);  color: #dc2626; border: 1px solid rgba(239,68,68,.3); }
+
+  .admin-note-box {
+    background: rgba(99,102,241,.06);
+    border: 1px solid rgba(99,102,241,.2);
+    border-radius: 8px;
+    padding: .45rem .65rem;
+    font-size: .76rem;
+    color: var(--text-secondary);
+    margin-top: .35rem;
+  }
+  .admin-note-box strong { color: #6366f1; }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid py-4 px-3 px-md-4">
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="mb-1 fw-800" style="color:var(--text-primary)">Submit a Scholarship</h4>
+      <p class="mb-0" style="color:var(--text-muted);font-size:.875rem">
+        Share scholarship opportunities with international students worldwide
+      </p>
+    </div>
+    <a href="{% url 'scholarships' %}" class="btn btn-sm" style="background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-secondary);border-radius:8px;font-size:.8rem;">
+      <i class="bi bi-award me-1"></i>View Scholarships
+    </a>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- LEFT: Submission form -->
+    <div class="col-lg-8">
+
+      {% if not has_university %}
+        <!-- No university gate -->
+        <div class="no-uni-gate">
+          <div class="gate-icon"><i class="bi bi-building-exclamation"></i></div>
+          <h5>University Required</h5>
+          <p>
+            You need to set your university in your profile before you can submit a scholarship.
+            Scholarships must be tied to a university.
+          </p>
+          <a href="{% url 'edit_profile' %}" class="btn submit-btn">
+            <i class="bi bi-pencil-fill me-2"></i>Update Profile
+          </a>
+        </div>
+
+      {% else %}
+        <form method="POST" id="submitForm">
+          {% csrf_token %}
+
+          <!-- Basic Info -->
+          <div class="su-card mb-4">
+            <div class="su-card-header">
+              <h5><i class="bi bi-award me-2"></i>Scholarship Details</h5>
+              <p>All fields marked with <span style="color:#ef4444;">*</span> are required</p>
+            </div>
+            <div class="su-card-body">
+              <div class="row g-3">
+
+                <div class="col-12">
+                  <label class="form-label">University <span class="req">*</span></label>
+                  {{ form.university_name }}
+                  <div style="font-size:.74rem;color:var(--text-muted);margin-top:.25rem;">
+                    <i class="bi bi-info-circle me-1"></i>Pre-filled from your profile. <a href="{% url 'edit_profile' %}" style="color:#6366f1;">Change it here</a>.
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Scholarship Title <span class="req">*</span></label>
+                  {{ form.title }}
+                  {% if form.title.errors %}
+                    <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.title.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Type <span class="req">*</span></label>
+                  {{ form.scholarship_type }}
+                  {% if form.scholarship_type.errors %}
+                    <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.scholarship_type.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Coverage <span class="req">*</span></label>
+                  {{ form.coverage }}
+                  {% if form.coverage.errors %}
+                    <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.coverage.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Stipend & Deadline -->
+          <div class="su-card mb-4">
+            <div class="su-card-body">
+              <p class="section-label"><i class="bi bi-currency-dollar me-1"></i>Stipend & Deadline</p>
+
+              <div class="row g-3">
+
+                <div class="col-md-6">
+                  <label class="form-label">Stipend Amount (USD)</label>
+                  <div id="stipendWrap">
+                    {{ form.stipend_amount }}
+                    {% if form.stipend_amount.errors %}
+                      <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.stipend_amount.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="check-row">
+                    {{ form.stipend_unknown }}
+                    <label for="stipendUnknown">Amount unknown / not disclosed</label>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Application Deadline</label>
+                  <div id="deadlineWrap">
+                    {{ form.deadline }}
+                    {% if form.deadline.errors %}
+                      <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.deadline.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="check-row">
+                    {{ form.no_deadline }}
+                    <label for="noDeadline">No fixed deadline / rolling</label>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Description & Link -->
+          <div class="su-card mb-4">
+            <div class="su-card-body">
+              <p class="section-label"><i class="bi bi-card-text me-1"></i>Description & Link</p>
+              <div class="row g-3">
+
+                <div class="col-12">
+                  <label class="form-label">Description <span class="req">*</span></label>
+                  {{ form.description }}
+                  <div class="char-counter" id="descCounter">0 / 2000</div>
+                  {% if form.description.errors %}
+                    <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.description.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Official Link</label>
+                  {{ form.link }}
+                  {% if form.link.errors %}
+                    <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.link.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <button type="submit" class="submit-btn btn" id="submitBtn">
+              <i class="bi bi-send me-2"></i>Submit for Review
+            </button>
+            <span style="font-size:.8rem;color:var(--text-muted);">
+              <i class="bi bi-clock me-1"></i>Usually reviewed within 24–48 hours
+            </span>
+          </div>
+
+        </form>
+      {% endif %}
+
+    </div>
+
+    <!-- RIGHT: Sidebar -->
+    <div class="col-lg-4">
+
+      <!-- How it works -->
+      <div class="su-card mb-3">
+        <div class="su-card-body">
+          <p class="section-label">How it Works</p>
+          <div class="d-flex flex-column gap-3">
+            <div class="d-flex gap-3 align-items-start">
+              <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem;flex-shrink:0;">1</div>
+              <div>
+                <div style="font-weight:600;font-size:.85rem;color:var(--text-primary);">Submit</div>
+                <div style="font-size:.78rem;color:var(--text-muted);">Fill in the scholarship details and submit</div>
+              </div>
+            </div>
+            <div class="d-flex gap-3 align-items-start">
+              <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem;flex-shrink:0;">2</div>
+              <div>
+                <div style="font-weight:600;font-size:.85rem;color:var(--text-primary);">Review</div>
+                <div style="font-size:.78rem;color:var(--text-muted);">Our admin team reviews for accuracy</div>
+              </div>
+            </div>
+            <div class="d-flex gap-3 align-items-start">
+              <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem;flex-shrink:0;">3</div>
+              <div>
+                <div style="font-weight:600;font-size:.85rem;color:var(--text-primary);">Published</div>
+                <div style="font-size:.78rem;color:var(--text-muted);">Approved scholarships appear on the Scholarships page</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Submissions -->
+      {% if user_submissions %}
+        <div class="su-card">
+          <div class="su-card-body">
+            <p class="section-label">My Submissions ({{ user_submissions.count }})</p>
+            {% for sub in user_submissions %}
+              <div class="history-card">
+                <div class="history-icon"><i class="bi bi-award-fill"></i></div>
+                <div class="history-info flex-grow-1 min-w-0">
+                  <h6 class="text-truncate">{{ sub.title }}</h6>
+                  <p>{{ sub.university_name }}</p>
+                  <p>{{ sub.get_scholarship_type_display }} · {{ sub.get_coverage_display }}</p>
+                  <p>Submitted {{ sub.submitted_at|timesince }} ago</p>
+                  {% if sub.admin_note %}
+                    <div class="admin-note-box mt-1">
+                      <strong><i class="bi bi-chat-left-text me-1"></i>Admin note:</strong> {{ sub.admin_note }}
+                    </div>
+                  {% endif %}
+                </div>
+                <div>
+                  <span class="status-pill {{ sub.status }}">
+                    {% if sub.status == 'pending' %}<i class="bi bi-hourglass-split"></i>Pending
+                    {% elif sub.status == 'approved' %}<i class="bi bi-check-circle-fill"></i>Approved
+                    {% else %}<i class="bi bi-x-circle-fill"></i>Rejected
+                    {% endif %}
+                  </span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <div class="su-card">
+          <div class="su-card-body text-center py-3">
+            <i class="bi bi-inbox" style="font-size:1.8rem;color:var(--text-muted);"></i>
+            <p style="font-size:.8rem;color:var(--text-muted);margin:.5rem 0 0;">No submissions yet</p>
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_db_js %}
+<script>
+(function () {
+  // ── Stipend unknown toggle ──────────────────────────────────────────
+  const stipendUnknown = document.getElementById('stipendUnknown');
+  const stipendWrap    = document.getElementById('stipendWrap');
+
+  function updateStipend() {
+    if (!stipendWrap || !stipendUnknown) return;
+    stipendWrap.style.opacity = stipendUnknown.checked ? '.4' : '1';
+    stipendWrap.style.pointerEvents = stipendUnknown.checked ? 'none' : '';
+    const input = stipendWrap.querySelector('input');
+    if (input) input.disabled = stipendUnknown.checked;
+  }
+
+  if (stipendUnknown) {
+    stipendUnknown.addEventListener('change', updateStipend);
+    updateStipend();
+  }
+
+  // ── No deadline toggle ──────────────────────────────────────────────
+  const noDeadline   = document.getElementById('noDeadline');
+  const deadlineWrap = document.getElementById('deadlineWrap');
+
+  function updateDeadline() {
+    if (!deadlineWrap || !noDeadline) return;
+    deadlineWrap.style.opacity = noDeadline.checked ? '.4' : '1';
+    deadlineWrap.style.pointerEvents = noDeadline.checked ? 'none' : '';
+    const input = deadlineWrap.querySelector('input');
+    if (input) input.disabled = noDeadline.checked;
+  }
+
+  if (noDeadline) {
+    noDeadline.addEventListener('change', updateDeadline);
+    updateDeadline();
+  }
+
+  // ── Description counter ─────────────────────────────────────────────
+  const descField   = document.querySelector('textarea[name="description"]');
+  const descCounter = document.getElementById('descCounter');
+
+  function updateDesc() {
+    const len = descField ? descField.value.length : 0;
+    if (!descCounter) return;
+    descCounter.textContent = `${len} / 2000`;
+    descCounter.className = 'char-counter' + (len > 1800 ? ' over' : len > 1600 ? ' warn' : '');
+  }
+
+  if (descField) {
+    descField.addEventListener('input', updateDesc);
+    updateDesc();
+  }
+
+  // ── Submit button loading state ─────────────────────────────────────
+  const submitForm = document.getElementById('submitForm');
+  const submitBtn  = document.getElementById('submitBtn');
+
+  if (submitForm && submitBtn) {
+    submitForm.addEventListener('submit', () => {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting…';
+    });
+  }
+})();
+</script>
+{% endblock %}

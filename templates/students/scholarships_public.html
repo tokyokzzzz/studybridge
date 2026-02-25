@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block title %}Scholarships — StudyBridge{% endblock %}
+
+{% block content %}
+<style>
+  body { background: #f8fafc; }
+
+  .pub-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #312e81 100%);
+    padding: 4rem 0 3rem;
+  }
+
+  .pub-header h1 {
+    color: #fff; font-weight: 800; font-size: 2rem; margin-bottom: .5rem;
+  }
+
+  .pub-header p { color: rgba(255,255,255,.65); font-size: 1rem; margin: 0; }
+
+  .pub-header .join-cta {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff; border: none; border-radius: 10px;
+    padding: .65rem 1.5rem; font-weight: 700; font-size: .9rem;
+    text-decoration: none; display: inline-flex; align-items: center; gap: .4rem;
+    margin-top: 1.25rem; transition: transform .15s, box-shadow .2s;
+  }
+  .pub-header .join-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(99,102,241,.4); color: #fff;
+  }
+
+  .search-section {
+    background: #fff; border-bottom: 1px solid #e2e8f0;
+    padding: 1.25rem 0; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+
+  .search-wrap { position: relative; max-width: 600px; }
+  .search-wrap .s-icon {
+    position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;
+  }
+  .search-wrap input {
+    width: 100%; background: #f1f5f9; border: 1.5px solid #e2e8f0;
+    color: #1e293b; border-radius: 10px;
+    padding: .6rem 1rem .6rem 2.6rem; font-size: .875rem;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .search-wrap input:focus {
+    outline: none; border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.1); background: #fff;
+  }
+
+  .filter-chips { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+  .filter-chip {
+    display: inline-flex; align-items: center; gap: .25rem;
+    background: #f1f5f9; border: 1.5px solid #e2e8f0;
+    color: #64748b; border-radius: 100px;
+    font-size: .75rem; font-weight: 600;
+    padding: .3rem .75rem; cursor: pointer; text-decoration: none;
+    transition: border-color .2s, background .2s, color .2s;
+  }
+  .filter-chip:hover, .filter-chip.active {
+    border-color: #6366f1; background: rgba(99,102,241,.08); color: #6366f1;
+  }
+
+  .sch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 1.25rem; padding: 2rem 0;
+  }
+
+  .sch-card {
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 16px; overflow: hidden;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+    display: flex; flex-direction: column;
+  }
+  .sch-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,.1);
+    border-color: rgba(99,102,241,.3);
+  }
+
+  .sch-card-top {
+    padding: 1.1rem 1.1rem .75rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .sch-badges { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .65rem; }
+  .sch-badge {
+    display: inline-flex; align-items: center; gap: .25rem;
+    border-radius: 100px; font-size: .69rem; font-weight: 700; padding: .18rem .55rem;
+  }
+  .sch-badge.type {
+    background: rgba(99,102,241,.1); color: #6366f1; border: 1px solid rgba(99,102,241,.2);
+  }
+  .sch-badge.coverage {
+    background: rgba(16,185,129,.1); color: #059669; border: 1px solid rgba(16,185,129,.2);
+  }
+
+  .sch-title { font-weight: 800; font-size: 1rem; color: #1e293b; margin-bottom: .2rem; line-height: 1.3; }
+  .sch-uni { font-size: .8rem; color: #94a3b8; display: flex; align-items: center; gap: .3rem; }
+
+  .sch-body { padding: .9rem 1.1rem; flex: 1; display: flex; flex-direction: column; }
+  .sch-meta {
+    display: flex; flex-wrap: wrap; gap: .75rem;
+    font-size: .78rem; color: #94a3b8; margin-bottom: .75rem;
+  }
+  .sch-meta span { display: flex; align-items: center; gap: .25rem; }
+  .sch-stipend { color: #1e293b; font-weight: 700; }
+  .sch-deadline-pill {
+    display: inline-flex; align-items: center; gap: .25rem;
+    background: rgba(245,158,11,.1); color: #d97706;
+    border: 1px solid rgba(245,158,11,.25);
+    border-radius: 100px; font-size: .72rem; font-weight: 600; padding: .18rem .55rem;
+  }
+  .sch-deadline-pill.rolling {
+    background: rgba(99,102,241,.08); color: #6366f1; border-color: rgba(99,102,241,.2);
+  }
+
+  .sch-desc {
+    font-size: .82rem; color: #64748b; line-height: 1.55; flex: 1;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  .sch-footer {
+    padding: .75rem 1.1rem; border-top: 1px solid #f1f5f9;
+    display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  }
+  .sch-submitter { display: flex; align-items: center; gap: .5rem; font-size: .75rem; color: #94a3b8; }
+  .submitter-avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .55rem; font-weight: 700; color: #fff;
+  }
+  .sch-apply-btn {
+    font-size: .75rem; font-weight: 600; color: #6366f1; text-decoration: none;
+    display: flex; align-items: center; gap: .25rem;
+    padding: .25rem .6rem; border-radius: 6px; border: 1px solid rgba(99,102,241,.25);
+    transition: background .2s;
+  }
+  .sch-apply-btn:hover { background: rgba(99,102,241,.08); color: #6366f1; }
+
+  .empty-state { text-align: center; padding: 4rem 2rem; grid-column: 1 / -1; }
+  .empty-state .es-icon { font-size: 3.5rem; color: #cbd5e1; margin-bottom: 1rem; }
+  .empty-state h5 { color: #1e293b; font-weight: 700; margin-bottom: .4rem; }
+  .empty-state p  { color: #94a3b8; font-size: .875rem; }
+</style>
+
+<!-- Hero -->
+<div class="pub-header">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <div>
+        <h1><i class="bi bi-trophy me-2"></i>Find Scholarships Worldwide</h1>
+        <p>Discover scholarship opportunities submitted by StudyBridge students</p>
+        <a href="{% url 'signup' %}" class="join-cta">
+          <i class="bi bi-person-plus-fill"></i>Join StudyBridge — It's Free
+        </a>
+      </div>
+      <div class="text-end" style="color:rgba(255,255,255,.5);font-size:.85rem;">
+        <div style="font-size:2rem;font-weight:800;color:#fff;">{{ scholarships|length }}</div>
+        <div>Scholarship{{ scholarships|length|pluralize }} Listed</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Search bar -->
+<div class="search-section">
+  <div class="container">
+    <form method="GET" action="" id="searchForm">
+      <div class="d-flex flex-column flex-md-row gap-3 align-items-start align-items-md-center">
+        <div class="search-wrap flex-grow-1">
+          <i class="bi bi-search s-icon"></i>
+          <input
+            type="text"
+            name="q"
+            value="{{ query }}"
+            placeholder="Search scholarships, universities…"
+            id="searchInput"
+            autocomplete="off"
+          >
+        </div>
+        <div class="filter-chips">
+          <a href="{% url 'scholarships' %}{% if query %}?q={{ query }}{% endif %}"
+             class="filter-chip {% if not type_filter %}active{% endif %}">All</a>
+          {% for value, label in type_choices %}
+            <a href="?{% if query %}q={{ query }}&{% endif %}type={{ value }}"
+               class="filter-chip {% if type_filter == value %}active{% endif %}">{{ label }}</a>
+          {% endfor %}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Grid -->
+<div class="container">
+  <div class="sch-grid">
+
+    {% for sch in scholarships %}
+      <div class="sch-card">
+        <div class="sch-card-top">
+          <div class="sch-badges">
+            <span class="sch-badge type"><i class="bi bi-tag-fill"></i>{{ sch.get_scholarship_type_display }}</span>
+            <span class="sch-badge coverage"><i class="bi bi-check2-circle"></i>{{ sch.get_coverage_display }}</span>
+          </div>
+          <h5 class="sch-title">{{ sch.title }}</h5>
+          <div class="sch-uni"><i class="bi bi-building"></i>{{ sch.university_name }}</div>
+        </div>
+
+        <div class="sch-body">
+          <div class="sch-meta">
+            <span>
+              <i class="bi bi-cash-coin"></i>
+              {% if sch.stipend_unknown %}
+                <span>Amount unknown</span>
+              {% elif sch.stipend_amount %}
+                <span class="sch-stipend">${{ sch.stipend_amount|floatformat:0 }}</span>
+              {% else %}
+                <span>Not specified</span>
+              {% endif %}
+            </span>
+            <span>
+              {% if sch.no_deadline %}
+                <span class="sch-deadline-pill rolling"><i class="bi bi-arrow-repeat"></i>Rolling deadline</span>
+              {% elif sch.deadline %}
+                <span class="sch-deadline-pill"><i class="bi bi-calendar-event"></i>{{ sch.deadline|date:"M d, Y" }}</span>
+              {% else %}
+                <span>No deadline set</span>
+              {% endif %}
+            </span>
+          </div>
+          <p class="sch-desc">{{ sch.description }}</p>
+        </div>
+
+        <div class="sch-footer">
+          <div class="sch-submitter">
+            <div class="submitter-avatar">{{ sch.submitted_by.get_initials }}</div>
+            <span>by {{ sch.submitted_by.get_display_name }}</span>
+          </div>
+          {% if sch.link %}
+            <a href="{{ sch.link }}" target="_blank" rel="noopener noreferrer" class="sch-apply-btn">
+              <i class="bi bi-box-arrow-up-right"></i>Apply
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="empty-state">
+        <div class="es-icon"><i class="bi bi-award"></i></div>
+        {% if query or type_filter %}
+          <h5>No scholarships found</h5>
+          <p>Try different search terms or clear the filters.</p>
+          <a href="{% url 'scholarships' %}" class="btn btn-outline-secondary btn-sm mt-2">Clear Filters</a>
+        {% else %}
+          <h5>No scholarships yet</h5>
+          <p>Join StudyBridge and be the first to submit a scholarship!</p>
+          <a href="{% url 'signup' %}" class="btn btn-primary mt-2">Join Now</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+  </div>
+</div>
+
+<script>
+(function () {
+  const input = document.getElementById('searchInput');
+  const form  = document.getElementById('searchForm');
+  let timer;
+  if (input && form) {
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => form.submit(), 500);
+    });
+  }
+})();
+</script>
+{% endblock %}

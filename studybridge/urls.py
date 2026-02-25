@@ -36,6 +36,10 @@ urlpatterns = [
     # Universities
     path('universities/', av.universities_page, name='universities'),
     path('universities/submit/', av.submit_university, name='submit_university'),
+
+    # Scholarships
+    path('scholarships/', av.scholarships_page, name='scholarships'),
+    path('scholarships/submit/', av.submit_scholarship, name='submit_scholarship'),
 ]
 
 if settings.DEBUG:

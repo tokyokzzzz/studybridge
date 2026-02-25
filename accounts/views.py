@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q
-from .forms import SignUpForm, LoginForm, EditProfileForm, UniversitySubmissionForm
-from .models import User, ConnectionRequest, Message, UniversitySubmission
+from .forms import SignUpForm, LoginForm, EditProfileForm, UniversitySubmissionForm, ScholarshipSubmissionForm
+from .models import User, ConnectionRequest, Message, UniversitySubmission, ScholarshipSubmission
 
 
 # ── Auth ──────────────────────────────────────────────────────────────
@@ -457,3 +457,68 @@ def universities_page(request):
     if request.user.is_authenticated:
         return render(request, 'students/universities.html', context)
     return render(request, 'students/universities_public.html', context)
+
+
+# ── Scholarship Submission ─────────────────────────────────────────────
+
+@login_required
+def submit_scholarship(request):
+    user_submissions = ScholarshipSubmission.objects.filter(submitted_by=request.user)
+    has_university = bool(request.user.university.strip())
+
+    if request.method == 'POST':
+        form = ScholarshipSubmissionForm(request.POST)
+        if form.is_valid():
+            sub = form.save(commit=False)
+            sub.submitted_by = request.user
+            sub.university_name = request.user.university
+            sub.save()
+            messages.success(request, 'Scholarship submitted for review! Our admin team will review it shortly.')
+            return redirect('submit_scholarship')
+        messages.error(request, 'Please fix the errors below.')
+    else:
+        initial = {'university_name': request.user.university}
+        form = ScholarshipSubmissionForm(initial=initial)
+
+    return render(request, 'students/submit_scholarship.html', {
+        'form': form,
+        'user_submissions': user_submissions,
+        'has_university': has_university,
+        'active_page': 'scholarships',
+        'page_title': 'Submit a Scholarship',
+    })
+
+
+# ── Scholarships Page ──────────────────────────────────────────────────
+
+def scholarships_page(request):
+    approved = ScholarshipSubmission.objects.filter(
+        status='approved'
+    ).select_related('submitted_by').order_by('-submitted_at')
+
+    query = request.GET.get('q', '').strip()
+    type_filter = request.GET.get('type', '').strip()
+
+    if query:
+        approved = approved.filter(
+            Q(university_name__icontains=query) |
+            Q(title__icontains=query) |
+            Q(description__icontains=query)
+        )
+    if type_filter:
+        approved = approved.filter(scholarship_type=type_filter)
+
+    type_choices = ScholarshipSubmission.SCHOLARSHIP_TYPE_CHOICES
+
+    context = {
+        'scholarships': approved,
+        'query': query,
+        'type_filter': type_filter,
+        'type_choices': type_choices,
+        'active_page': 'scholarships',
+        'page_title': 'Scholarships',
+    }
+
+    if request.user.is_authenticated:
+        return render(request, 'students/scholarships.html', context)
+    return render(request, 'students/scholarships_public.html', context)

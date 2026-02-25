@@ -108,3 +108,52 @@ class UniversitySubmission(models.Model):
 
     def __str__(self):
         return f"{self.university_name} — {self.get_status_display()} (by {self.submitted_by.username})"
+
+
+class ScholarshipSubmission(models.Model):
+    SCHOLARSHIP_TYPE_CHOICES = [
+        ('merit', 'Merit-Based'),
+        ('need', 'Need-Based'),
+        ('full', 'Full Scholarship'),
+        ('partial', 'Partial Scholarship'),
+        ('sports', 'Sports'),
+        ('arts', 'Arts & Culture'),
+        ('research', 'Research'),
+        ('government', 'Government / National'),
+        ('other', 'Other'),
+    ]
+    COVERAGE_CHOICES = [
+        ('full_tuition', 'Full Tuition'),
+        ('partial_tuition', 'Partial Tuition'),
+        ('living', 'Living Expenses'),
+        ('tuition_living', 'Tuition + Living Expenses'),
+        ('research', 'Research Funding'),
+        ('other', 'Other'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    submitted_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='scholarship_submissions')
+    university_name = models.CharField(max_length=200)
+    title = models.CharField(max_length=200)
+    scholarship_type = models.CharField(max_length=20, choices=SCHOLARSHIP_TYPE_CHOICES)
+    coverage = models.CharField(max_length=20, choices=COVERAGE_CHOICES)
+    stipend_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    stipend_unknown = models.BooleanField(default=False)
+    deadline = models.DateField(null=True, blank=True)
+    no_deadline = models.BooleanField(default=False)
+    description = models.TextField(max_length=2000)
+    link = models.URLField(blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    admin_note = models.TextField(blank=True, help_text='Note to the submitter (visible to them)')
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"{self.title} @ {self.university_name} — {self.get_status_display()}"
