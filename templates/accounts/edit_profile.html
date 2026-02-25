@@ -1,0 +1,541 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Edit Profile — StudyBridge{% endblock %}
+
+{% block extra_db_css %}
+<style>
+  .profile-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: background .3s, border-color .3s;
+  }
+
+  .profile-card-header {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-card-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Ccircle cx='30' cy='30' r='30'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+  }
+
+  .profile-card-header h5 {
+    position: relative;
+    color: #fff;
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .profile-card-header p {
+    position: relative;
+    color: rgba(255,255,255,.75);
+    margin: .25rem 0 0;
+    font-size: .875rem;
+  }
+
+  .profile-card-body {
+    padding: 1.75rem;
+  }
+
+  .avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--card-bg);
+    transition: border-color .3s, background .3s;
+  }
+
+  .avatar-circle-lg {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    overflow: hidden;
+    border: 3px solid rgba(99,102,241,.3);
+  }
+
+  .avatar-circle-lg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .avatar-info h6 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .avatar-info p {
+    margin: .2rem 0 0;
+    font-size: .8rem;
+    color: var(--text-muted);
+  }
+
+  .section-label {
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #6366f1;
+    margin-bottom: .75rem;
+    padding-bottom: .4rem;
+    border-bottom: 2px solid rgba(99,102,241,.15);
+  }
+
+  .form-label {
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: .35rem;
+  }
+
+  .form-control, .form-select {
+    background: var(--input-bg);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: .6rem .85rem;
+    font-size: .875rem;
+    transition: border-color .2s, box-shadow .2s, background .3s;
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+    background: var(--input-bg);
+    color: var(--text-primary);
+  }
+
+  .form-control::placeholder {
+    color: var(--text-muted);
+    opacity: .7;
+  }
+
+  textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  .char-counter {
+    font-size: .75rem;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: .25rem;
+  }
+
+  .char-counter.warn { color: #f59e0b; }
+  .char-counter.over  { color: #ef4444; }
+
+  .save-btn {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none;
+    color: #fff;
+    padding: .7rem 2rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: .9rem;
+    transition: transform .15s, box-shadow .2s;
+  }
+
+  .save-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99,102,241,.35);
+    color: #fff;
+  }
+
+  .save-btn:active { transform: translateY(0); }
+
+  .completeness-bar-wrap {
+    background: var(--input-bg);
+    border-radius: 100px;
+    height: 8px;
+    overflow: hidden;
+    margin-top: .4rem;
+  }
+
+  .completeness-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    transition: width .6s ease;
+  }
+
+  .completeness-label {
+    font-size: .78rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    margin-top: .3rem;
+  }
+
+  .tip-card {
+    background: rgba(99,102,241,.07);
+    border: 1px solid rgba(99,102,241,.18);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+  }
+
+  .tip-card h6 {
+    font-size: .8rem;
+    font-weight: 700;
+    color: #6366f1;
+    margin-bottom: .5rem;
+  }
+
+  .tip-card li {
+    font-size: .8rem;
+    color: var(--text-secondary);
+    margin-bottom: .25rem;
+  }
+
+  .field-icon-group {
+    position: relative;
+  }
+
+  .field-icon-group .field-icon {
+    position: absolute;
+    left: .75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: .9rem;
+    pointer-events: none;
+  }
+
+  .field-icon-group .form-control {
+    padding-left: 2.2rem;
+  }
+
+  @media (max-width: 768px) {
+    .profile-card-body { padding: 1.25rem; }
+    .avatar-section { flex-direction: column; text-align: center; }
+  }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid py-4 px-3 px-md-4">
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="mb-1 fw-800" style="color:var(--text-primary)">Edit Profile</h4>
+      <p class="mb-0" style="color:var(--text-muted);font-size:.875rem">
+        Keep your profile up-to-date so other students can find you
+      </p>
+    </div>
+    <a href="{% url 'dashboard' %}" class="btn btn-sm" style="background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-secondary);border-radius:8px;font-size:.8rem;">
+      <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+    </a>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- LEFT: Main form -->
+    <div class="col-lg-8">
+      <form method="POST" id="profileForm">
+        {% csrf_token %}
+
+        <!-- Avatar + Name header -->
+        <div class="profile-card mb-4">
+          <div class="avatar-section">
+            <div class="avatar-circle-lg" id="avatarDisplay">
+              {% if request.user.avatar %}
+                <img src="{{ request.user.avatar.url }}" alt="avatar">
+              {% else %}
+                {{ request.user.get_initials }}
+              {% endif %}
+            </div>
+            <div class="avatar-info">
+              <h6>{{ request.user.get_display_name }}</h6>
+              <p>@{{ request.user.username }} · {{ request.user.email }}</p>
+              <p style="margin-top:.35rem;color:#6366f1;font-size:.78rem;">
+                <i class="bi bi-info-circle me-1"></i>Profile photo upload coming soon
+              </p>
+            </div>
+          </div>
+
+          <div class="profile-card-body">
+            <p class="section-label">Personal Information</p>
+            <div class="row g-3">
+
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.full_name.id_for_label }}">
+                  <i class="bi bi-person me-1"></i>Full Name
+                </label>
+                {{ form.full_name }}
+                {% if form.full_name.errors %}
+                  <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.full_name.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.field_of_study.id_for_label }}">
+                  <i class="bi bi-book me-1"></i>Field of Study
+                </label>
+                {{ form.field_of_study }}
+                {% if form.field_of_study.errors %}
+                  <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.field_of_study.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.country_of_origin.id_for_label }}">
+                  <i class="bi bi-geo me-1"></i>Country of Origin
+                </label>
+                {{ form.country_of_origin }}
+                {% if form.country_of_origin.errors %}
+                  <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.country_of_origin.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.current_country.id_for_label }}">
+                  <i class="bi bi-geo-alt me-1"></i>Currently Studying In
+                </label>
+                {{ form.current_country }}
+                {% if form.current_country.errors %}
+                  <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.current_country.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Academic Info -->
+        <div class="profile-card mb-4">
+          <div class="profile-card-header">
+            <h5><i class="bi bi-mortarboard me-2"></i>Academic Information</h5>
+            <p>Your academic details help students find you by university or level</p>
+          </div>
+          <div class="profile-card-body">
+            <div class="row g-3">
+
+              <div class="col-12">
+                <label class="form-label" for="{{ form.university.id_for_label }}">
+                  <i class="bi bi-building me-1"></i>University / Institution
+                </label>
+                {{ form.university }}
+                {% if form.university.errors %}
+                  <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.university.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.study_level.id_for_label }}">
+                  <i class="bi bi-award me-1"></i>Study Level
+                </label>
+                {{ form.study_level }}
+                {% if form.study_level.errors %}
+                  <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.study_level.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.year_of_study.id_for_label }}">
+                  <i class="bi bi-calendar3 me-1"></i>Year of Study
+                </label>
+                {{ form.year_of_study }}
+                {% if form.year_of_study.errors %}
+                  <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.year_of_study.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Bio -->
+        <div class="profile-card mb-4">
+          <div class="profile-card-body">
+            <p class="section-label">About Me</p>
+            <label class="form-label" for="{{ form.bio.id_for_label }}">
+              <i class="bi bi-chat-quote me-1"></i>Bio
+              <span style="font-weight:400;color:var(--text-muted);font-size:.78rem;">(optional)</span>
+            </label>
+            {{ form.bio }}
+            <div class="char-counter" id="bioCounter">0 / 500</div>
+            {% if form.bio.errors %}
+              <div class="text-danger" style="font-size:.78rem;margin-top:.25rem;">{{ form.bio.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <button type="submit" class="save-btn btn" id="saveBtn">
+            <i class="bi bi-check2-circle me-2"></i>Save Changes
+          </button>
+          <span id="saveStatus" style="font-size:.82rem;color:var(--text-muted);display:none;">
+            <i class="bi bi-check-circle-fill text-success me-1"></i>Saved!
+          </span>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- RIGHT: Sidebar info -->
+    <div class="col-lg-4">
+
+      <!-- Profile Completeness -->
+      <div class="profile-card mb-3">
+        <div class="profile-card-body">
+          <p class="section-label">Profile Completeness</p>
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <span style="font-size:.85rem;font-weight:600;color:var(--text-primary);">Your Profile</span>
+            <span style="font-size:.85rem;font-weight:700;color:#6366f1;" id="completePct">—</span>
+          </div>
+          <div class="completeness-bar-wrap">
+            <div class="completeness-bar-fill" id="completeBar" style="width:0%"></div>
+          </div>
+          <div class="completeness-label">
+            <span>Fill in all fields to stand out</span>
+          </div>
+
+          <div class="mt-3" id="missingFields" style="display:none;">
+            <p style="font-size:.78rem;font-weight:600;color:var(--text-muted);margin-bottom:.4rem;">Missing fields:</p>
+            <ul id="missingList" style="font-size:.78rem;color:var(--text-secondary);padding-left:1.1rem;margin:0;"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tips -->
+      <div class="profile-card mb-3">
+        <div class="profile-card-body">
+          <p class="section-label">Profile Tips</p>
+          <div class="tip-card">
+            <h6><i class="bi bi-lightbulb me-1"></i>Tips for a great profile</h6>
+            <ul style="margin:0;padding-left:1rem;">
+              <li>Add a detailed bio to introduce yourself</li>
+              <li>Include your field of study to match with peers</li>
+              <li>Set your current country so local students find you</li>
+              <li>A complete profile gets 3× more connection requests</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="profile-card">
+        <div class="profile-card-body">
+          <p class="section-label">Quick Actions</p>
+          <div class="d-flex flex-column gap-2">
+            <a href="{% url 'find_students' %}" class="btn btn-sm d-flex align-items-center gap-2" style="background:var(--input-bg);border:1px solid var(--border-color);color:var(--text-secondary);border-radius:8px;font-size:.82rem;">
+              <i class="bi bi-people"></i>Find Students
+            </a>
+            <a href="{% url 'connections' %}" class="btn btn-sm d-flex align-items-center gap-2" style="background:var(--input-bg);border:1px solid var(--border-color);color:var(--text-secondary);border-radius:8px;font-size:.82rem;">
+              <i class="bi bi-person-check"></i>My Connections
+            </a>
+            <a href="{% url 'submit_university' %}" class="btn btn-sm d-flex align-items-center gap-2" style="background:var(--input-bg);border:1px solid var(--border-color);color:var(--text-secondary);border-radius:8px;font-size:.82rem;">
+              <i class="bi bi-building-add"></i>Submit a University
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_db_js %}
+<script>
+(function () {
+  // ── Bio character counter ────────────────────────────────────────────
+  const bioField = document.querySelector('textarea[name="bio"]');
+  const bioCounter = document.getElementById('bioCounter');
+
+  function updateBioCounter() {
+    const len = bioField ? bioField.value.length : 0;
+    if (!bioCounter) return;
+    bioCounter.textContent = `${len} / 500`;
+    bioCounter.className = 'char-counter' + (len > 480 ? ' over' : len > 400 ? ' warn' : '');
+  }
+
+  if (bioField) {
+    bioField.addEventListener('input', updateBioCounter);
+    updateBioCounter();
+  }
+
+  // ── Profile completeness ─────────────────────────────────────────────
+  const fields = [
+    { name: 'full_name',        label: 'Full Name' },
+    { name: 'country_of_origin',label: 'Country of Origin' },
+    { name: 'current_country',  label: 'Currently Studying In' },
+    { name: 'university',       label: 'University' },
+    { name: 'study_level',      label: 'Study Level' },
+    { name: 'year_of_study',    label: 'Year of Study' },
+    { name: 'field_of_study',   label: 'Field of Study' },
+    { name: 'bio',              label: 'Bio' },
+  ];
+
+  const pctEl  = document.getElementById('completePct');
+  const barEl  = document.getElementById('completeBar');
+  const missingWrap = document.getElementById('missingFields');
+  const missingList = document.getElementById('missingList');
+
+  function calcCompleteness() {
+    let filled = 0;
+    const missing = [];
+    fields.forEach(f => {
+      const el = document.querySelector(`[name="${f.name}"]`);
+      if (el && el.value.trim()) {
+        filled++;
+      } else {
+        missing.push(f.label);
+      }
+    });
+    const pct = Math.round((filled / fields.length) * 100);
+    if (pctEl) pctEl.textContent = pct + '%';
+    if (barEl)  barEl.style.width = pct + '%';
+
+    if (missingList && missingWrap) {
+      if (missing.length > 0) {
+        missingWrap.style.display = 'block';
+        missingList.innerHTML = missing.map(m => `<li>${m}</li>`).join('');
+      } else {
+        missingWrap.style.display = 'none';
+      }
+    }
+  }
+
+  document.querySelectorAll('#profileForm input, #profileForm select, #profileForm textarea').forEach(el => {
+    el.addEventListener('input', calcCompleteness);
+    el.addEventListener('change', calcCompleteness);
+  });
+  calcCompleteness();
+
+  // ── Save button feedback ─────────────────────────────────────────────
+  {% if messages %}
+    {% for message in messages %}
+      {% if 'updated' in message.message or 'success' in message.tags %}
+        const saveStatus = document.getElementById('saveStatus');
+        if (saveStatus) {
+          saveStatus.style.display = 'inline-flex';
+          setTimeout(() => saveStatus.style.display = 'none', 3000);
+        }
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+})();
+</script>
+{% endblock %}

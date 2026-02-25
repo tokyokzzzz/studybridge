@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir D:\\\\study_bridge:*)"
+      "Bash(dir D:\\\\study_bridge:*)",
+      "Bash(python:*)"
     ]
   }
 }

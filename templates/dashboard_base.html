@@ -303,13 +303,13 @@
     </a>
 
     <div class="sidebar-section-label">Explore</div>
-    <a href="#" class="sidebar-link"><i class="bi bi-building-fill"></i> Universities <span class="sb-badge soon">Soon</span></a>
+    <a href="{% url 'universities' %}" class="sidebar-link {% if active_page == 'universities' %}active{% endif %}"><i class="bi bi-building-fill"></i> Universities</a>
     <a href="#" class="sidebar-link"><i class="bi bi-map-fill"></i> Country Guides <span class="sb-badge soon">Soon</span></a>
     <a href="#" class="sidebar-link"><i class="bi bi-journal-richtext"></i> Forums <span class="sb-badge soon">Soon</span></a>
     <a href="#" class="sidebar-link"><i class="bi bi-award-fill"></i> Scholarships <span class="sb-badge soon">Soon</span></a>
 
     <div class="sidebar-section-label">Account</div>
-    <a href="#" class="sidebar-link"><i class="bi bi-person-fill"></i> My Profile</a>
+    <a href="{% url 'edit_profile' %}" class="sidebar-link {% if active_page == 'profile' %}active{% endif %}"><i class="bi bi-person-fill"></i> My Profile</a>
     <a href="#" class="sidebar-link"><i class="bi bi-gear-fill"></i> Settings</a>
     <a href="#" class="sidebar-link"><i class="bi bi-question-circle-fill"></i> Help</a>
   </nav>

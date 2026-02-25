@@ -81,3 +81,30 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender.username} → {self.receiver.username}: {self.content[:50]}"
+
+
+class UniversitySubmission(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    submitted_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='university_submissions')
+    university_name = models.CharField(max_length=200)
+    country = models.CharField(max_length=100)
+    city = models.CharField(max_length=100, blank=True)
+    description = models.TextField(max_length=3000)
+    website = models.URLField(blank=True)
+    founded_year = models.PositiveIntegerField(null=True, blank=True)
+    photo = models.ImageField(upload_to='universities/')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    admin_note = models.TextField(blank=True, help_text='Note to the submitter (visible to them)')
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"{self.university_name} — {self.get_status_display()} (by {self.submitted_by.username})"

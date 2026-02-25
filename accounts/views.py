@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q
-from .forms import SignUpForm, LoginForm
-from .models import User, ConnectionRequest, Message
+from .forms import SignUpForm, LoginForm, EditProfileForm, UniversitySubmissionForm
+from .models import User, ConnectionRequest, Message, UniversitySubmission
 
 
 # ── Auth ──────────────────────────────────────────────────────────────
@@ -340,3 +340,89 @@ def get_messages_ajax(request, username):
             'is_mine': m.sender == request.user,
         } for m in msgs]
     })
+
+
+# ── Edit Profile ──────────────────────────────────────────────────────
+
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        form = EditProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('edit_profile')
+        messages.error(request, 'Please fix the errors below.')
+    else:
+        form = EditProfileForm(instance=request.user)
+
+    return render(request, 'accounts/edit_profile.html', {
+        'form': form,
+        'active_page': 'profile',
+        'page_title': 'Edit Profile',
+    })
+
+
+# ── University Submission ─────────────────────────────────────────────
+
+@login_required
+def submit_university(request):
+    user_submissions = UniversitySubmission.objects.filter(submitted_by=request.user)
+
+    if request.method == 'POST':
+        form = UniversitySubmissionForm(request.POST, request.FILES)
+        if form.is_valid():
+            sub = form.save(commit=False)
+            sub.submitted_by = request.user
+            sub.save()
+            messages.success(request, 'University submitted for review! Our admin team will review it shortly.')
+            return redirect('submit_university')
+        messages.error(request, 'Please fix the errors below.')
+    else:
+        form = UniversitySubmissionForm()
+
+    return render(request, 'students/submit_university.html', {
+        'form': form,
+        'user_submissions': user_submissions,
+        'active_page': 'universities',
+        'page_title': 'Submit University',
+    })
+
+
+# ── Universities Page ─────────────────────────────────────────────────
+
+def universities_page(request):
+    approved = UniversitySubmission.objects.filter(
+        status='approved'
+    ).select_related('submitted_by').order_by('university_name')
+
+    query = request.GET.get('q', '').strip()
+    country_filter = request.GET.get('country', '').strip()
+
+    if query:
+        approved = approved.filter(
+            Q(university_name__icontains=query) |
+            Q(country__icontains=query) |
+            Q(city__icontains=query) |
+            Q(description__icontains=query)
+        )
+    if country_filter:
+        approved = approved.filter(country__icontains=country_filter)
+
+    countries = UniversitySubmission.objects.filter(
+        status='approved'
+    ).values_list('country', flat=True).distinct().order_by('country')
+
+    context = {
+        'universities': approved,
+        'query': query,
+        'country_filter': country_filter,
+        'countries': countries,
+        'active_page': 'universities',
+        'page_title': 'Universities',
+    }
+
+    # Support both dashboard and landing page view
+    if request.user.is_authenticated:
+        return render(request, 'students/universities.html', context)
+    return render(request, 'students/universities_public.html', context)
