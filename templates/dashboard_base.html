@@ -295,7 +295,7 @@
         <span class="sb-badge count">{{ pending_requests_count }}</span>
       {% endif %}
     </a>
-    <a href="#" class="sidebar-link {% if active_page == 'messages' %}active{% endif %}">
+    <a href="{% url 'messages_inbox' %}" class="sidebar-link {% if active_page == 'messages' %}active{% endif %}">
       <i class="bi bi-chat-dots-fill"></i> Messages
       {% if unread_messages_count > 0 %}
         <span class="sb-badge count">{{ unread_messages_count }}</span>
@@ -393,8 +393,8 @@
             </div>
           </div>
           <div class="dd-links">
-            <a href="#" class="dd-link"><i class="bi bi-person-circle"></i> View Profile</a>
-            <a href="#" class="dd-link"><i class="bi bi-pencil-fill"></i> Edit Profile</a>
+            <a href="{% url 'edit_profile' %}" class="dd-link"><i class="bi bi-person-circle"></i> View Profile</a>
+            <a href="{% url 'edit_profile' %}" class="dd-link"><i class="bi bi-pencil-fill"></i> Edit Profile</a>
             <a href="#" class="dd-link"><i class="bi bi-gear-fill"></i> Settings</a>
             <div class="dd-divider"></div>
             <a href="{% url 'logout' %}" class="dd-logout"><i class="bi bi-box-arrow-right"></i> Logout</a>

@@ -25,6 +25,9 @@ urlpatterns = [
     path('connections/', av.connections_view, name='connections'),
     path('connections/<int:pk>/<str:action>/', av.handle_connection_request, name='handle_connection_request'),
 
+    # Messages inbox
+    path('messages/', av.messages_inbox, name='messages_inbox'),
+
     # Chat (send/ MUST be before <username>/)
     path('chat/send/', av.send_message_ajax, name='send_message'),
     path('chat/messages/<str:username>/', av.get_messages_ajax, name='get_messages'),

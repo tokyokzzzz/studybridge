@@ -225,6 +225,37 @@ def connections_view(request):
     })
 
 
+# ── Messages Inbox ────────────────────────────────────────────────────
+
+@login_required
+def messages_inbox(request):
+    accepted_qs = ConnectionRequest.objects.filter(
+        Q(from_user=request.user) | Q(to_user=request.user),
+        status='accepted'
+    ).select_related('from_user', 'to_user')
+
+    chat_list = []
+    for conn in accepted_qs:
+        other = conn.to_user if conn.from_user == request.user else conn.from_user
+        last_msg = Message.objects.filter(
+            Q(sender=request.user, receiver=other) |
+            Q(sender=other, receiver=request.user)
+        ).order_by('-timestamp').first()
+        unread = Message.objects.filter(sender=other, receiver=request.user, is_read=False).count()
+        chat_list.append({'user': other, 'last_message': last_msg, 'unread': unread})
+
+    chat_list.sort(
+        key=lambda x: x['last_message'].timestamp if x['last_message'] else x['user'].date_joined,
+        reverse=True
+    )
+
+    return render(request, 'students/messages_inbox.html', {
+        'chat_list': chat_list,
+        'active_page': 'messages',
+        'page_title': 'Messages',
+    })
+
+
 # ── Chat ──────────────────────────────────────────────────────────────
 
 @login_required
