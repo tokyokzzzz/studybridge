@@ -1,0 +1,248 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Find Students — StudyBridge{% endblock %}
+
+{% block extra_db_css %}
+<style>
+  .search-bar-wrap {
+    background: var(--db-surface); border: 1px solid var(--db-border);
+    border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.75rem;
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  }
+  .search-input-wrap { flex: 1; min-width: 220px; position: relative; }
+  .search-input-wrap i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--db-text-3); font-size: 1rem; }
+  .search-input {
+    width: 100%; padding: .75rem 1rem .75rem 2.75rem;
+    border: 1.5px solid var(--db-border); border-radius: 11px;
+    background: var(--db-surface-2); color: var(--db-text);
+    font-size: .9rem; font-family: 'Inter',sans-serif;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37,99,235,.1); }
+  .search-input::placeholder { color: var(--db-text-3); }
+  .search-meta { font-size: .82rem; color: var(--db-text-2); white-space: nowrap; }
+
+  /* ── Student Grid ── */
+  .students-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.125rem;
+  }
+
+  .student-card {
+    background: var(--db-surface); border: 1px solid var(--db-border);
+    border-radius: 16px; padding: 1.5rem 1.25rem;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; transition: all .25s; position: relative;
+    overflow: hidden;
+  }
+  .student-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--gradient-primary); transform: scaleX(0);
+    transform-origin: left; transition: transform .3s;
+  }
+  .student-card:hover { transform: translateY(-5px); box-shadow: var(--db-shadow-md); border-color: rgba(37,99,235,.2); }
+  .student-card:hover::before { transform: scaleX(1); }
+
+  .sc-avatar {
+    width: 64px; height: 64px; border-radius: 20px;
+    background: var(--gradient-primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 800; color: #fff;
+    margin-bottom: 1rem;
+    box-shadow: 0 6px 20px rgba(37,99,235,.3);
+  }
+  .sc-name { font-size: .95rem; font-weight: 700; color: var(--db-text); margin-bottom: .2rem; }
+  .sc-username { font-size: .78rem; color: var(--db-text-3); margin-bottom: .75rem; }
+
+  .sc-tags { display: flex; flex-wrap: wrap; gap: .375rem; justify-content: center; margin-bottom: 1rem; }
+  .sc-tag {
+    display: flex; align-items: center; gap: .3rem;
+    background: var(--db-surface-2); border: 1px solid var(--db-border);
+    border-radius: 50px; padding: .22rem .65rem;
+    font-size: .73rem; color: var(--db-text-2); font-weight: 500;
+  }
+  .sc-tag i { font-size: .7rem; }
+
+  .sc-bio { font-size: .78rem; color: var(--db-text-2); line-height: 1.5; margin-bottom: 1rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .sc-actions { display: flex; gap: .5rem; width: 100%; margin-top: auto; }
+  .sc-btn-view {
+    flex: 1; padding: .55rem .75rem; border-radius: 9px;
+    background: var(--gradient-primary); color: #fff;
+    text-decoration: none; font-size: .8rem; font-weight: 600;
+    transition: all .2s; text-align: center;
+    box-shadow: 0 3px 10px rgba(37,99,235,.3);
+  }
+  .sc-btn-view:hover { opacity: .9; transform: translateY(-1px); color: #fff; }
+  .sc-btn-connect {
+    padding: .55rem .75rem; border-radius: 9px; border: 1.5px solid var(--db-border);
+    background: var(--db-surface); color: var(--db-text-2);
+    font-size: .8rem; font-weight: 600; cursor: pointer;
+    transition: all .2s; white-space: nowrap;
+  }
+  .sc-btn-connect:hover { border-color: rgba(37,99,235,.4); color: var(--primary); background: rgba(37,99,235,.04); }
+  .sc-btn-connect.pending { background: rgba(249,115,22,.08); border-color: rgba(249,115,22,.25); color: #f97316; cursor: default; }
+  .sc-btn-connect.accepted { background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.25); color: #10b981; }
+  .sc-btn-connect.received { background: rgba(124,58,237,.08); border-color: rgba(124,58,237,.25); color: #7c3aed; }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 4rem 2rem; }
+  .empty-state .es-icon { font-size: 3.5rem; margin-bottom: 1rem; opacity: .6; }
+  .empty-state h3 { font-size: 1.15rem; font-weight: 700; color: var(--db-text); margin-bottom: .5rem; }
+  .empty-state p { font-size: .875rem; color: var(--db-text-2); }
+
+  /* Loading skeleton */
+  .skeleton-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 1.125rem; }
+  .skel-card { background: var(--db-surface); border: 1px solid var(--db-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: .75rem; }
+  .skel { background: linear-gradient(90deg, var(--db-surface-2) 25%, var(--db-border) 50%, var(--db-surface-2) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="search-bar-wrap">
+  <div class="search-input-wrap">
+    <i class="bi bi-search"></i>
+    <input type="text" class="search-input" id="searchInput" placeholder="Search by name, username, university, country…" value="{{ query }}" autocomplete="off">
+  </div>
+  <div class="search-meta" id="resultCount">
+    {% if students_with_conn %}{{ students_with_conn|length }} student{% if students_with_conn|length != 1 %}s{% endif %} found{% else %}No students found{% endif %}
+  </div>
+</div>
+
+<div id="studentsContainer">
+  {% if students_with_conn %}
+  <div class="students-grid" id="studentsGrid">
+    {% for student, conn in students_with_conn %}
+    <div class="student-card">
+      <div class="sc-avatar">{{ student.get_initials }}</div>
+      <div class="sc-name">{{ student.get_display_name }}</div>
+      <div class="sc-username">@{{ student.username }}</div>
+
+      <div class="sc-tags">
+        {% if student.current_country %}<span class="sc-tag"><i class="bi bi-geo-alt-fill"></i>{{ student.current_country }}</span>{% endif %}
+        {% if student.university %}<span class="sc-tag"><i class="bi bi-building"></i>{{ student.university|truncatechars:22 }}</span>{% endif %}
+        {% if student.field_of_study %}<span class="sc-tag"><i class="bi bi-mortarboard"></i>{{ student.field_of_study|truncatechars:18 }}</span>{% endif %}
+        {% if student.year_of_study %}<span class="sc-tag"><i class="bi bi-calendar3"></i>{{ student.get_year_of_study_display }}</span>{% endif %}
+        {% if not student.current_country and not student.university and not student.field_of_study %}
+          <span class="sc-tag"><i class="bi bi-person"></i>Student</span>
+        {% endif %}
+      </div>
+
+      {% if student.bio %}<div class="sc-bio">{{ student.bio }}</div>{% endif %}
+
+      <div class="sc-actions">
+        <a href="{% url 'student_profile' student.username %}" class="sc-btn-view">View Profile</a>
+
+        {% if not conn %}
+          <form method="post" action="{% url 'send_connection_request' student.username %}" style="margin:0;">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="/students/">
+            <button type="submit" class="sc-btn-connect" title="Send connection request">
+              <i class="bi bi-person-plus"></i>
+            </button>
+          </form>
+        {% elif conn.status == 'accepted' %}
+          <a href="{% url 'chat' student.username %}" class="sc-btn-connect accepted" title="Message">
+            <i class="bi bi-chat-fill"></i>
+          </a>
+        {% elif conn.status == 'pending' and conn.direction == 'sent' %}
+          <span class="sc-btn-connect pending" title="Request pending">
+            <i class="bi bi-clock"></i>
+          </span>
+        {% elif conn.status == 'pending' and conn.direction == 'received' %}
+          <a href="{% url 'connections' %}" class="sc-btn-connect received" title="Respond to request">
+            <i class="bi bi-person-check"></i>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="es-icon">🔍</div>
+    <h3>{% if query %}No results for "{{ query }}"{% else %}No students yet{% endif %}</h3>
+    <p>{% if query %}Try a different name, university, or country.{% else %}Be the first to join — invite friends to StudyBridge!{% endif %}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_db_js %}
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const container = document.getElementById('studentsContainer');
+  const countEl = document.getElementById('resultCount');
+  const csrfToken = '{{ csrf_token }}';
+
+  let debounceTimer;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => fetchStudents(searchInput.value.trim()), 320);
+  });
+
+  function fetchStudents(q) {
+    // Show skeleton while loading
+    container.innerHTML = buildSkeleton(8);
+    countEl.textContent = 'Searching…';
+
+    fetch(`/students/?q=${encodeURIComponent(q)}`, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+      countEl.textContent = `${data.count} student${data.count !== 1 ? 's' : ''} found`;
+      if (data.students.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="es-icon">🔍</div><h3>${q ? 'No results for "' + escHtml(q) + '"' : 'No students yet'}</h3><p>Try a different search term.</p></div>`;
+        return;
+      }
+      container.innerHTML = `<div class="students-grid">${data.students.map(renderCard).join('')}</div>`;
+    })
+    .catch(() => { countEl.textContent = 'Error loading'; });
+  }
+
+  function renderCard(s) {
+    const tags = [];
+    if (s.current_country) tags.push(`<span class="sc-tag"><i class="bi bi-geo-alt-fill"></i>${escHtml(s.current_country)}</span>`);
+    if (s.university) tags.push(`<span class="sc-tag"><i class="bi bi-building"></i>${escHtml(s.university.substring(0,22))}${s.university.length>22?'…':''}</span>`);
+    if (s.field_of_study) tags.push(`<span class="sc-tag"><i class="bi bi-mortarboard"></i>${escHtml(s.field_of_study.substring(0,18))}${s.field_of_study.length>18?'…':''}</span>`);
+    if (s.year_of_study) tags.push(`<span class="sc-tag"><i class="bi bi-calendar3"></i>${escHtml(s.year_of_study)}</span>`);
+    if (!tags.length) tags.push(`<span class="sc-tag"><i class="bi bi-person"></i>Student</span>`);
+
+    let actionBtn = '';
+    const conn = s.connection;
+    if (!conn) {
+      actionBtn = `<form method="post" action="/students/${s.username}/connect/" style="margin:0;"><input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}"><input type="hidden" name="next" value="/students/"><button type="submit" class="sc-btn-connect" title="Connect"><i class="bi bi-person-plus"></i></button></form>`;
+    } else if (conn.status === 'accepted') {
+      actionBtn = `<a href="/chat/${s.username}/" class="sc-btn-connect accepted" title="Message"><i class="bi bi-chat-fill"></i></a>`;
+    } else if (conn.status === 'pending' && conn.direction === 'sent') {
+      actionBtn = `<span class="sc-btn-connect pending" title="Pending"><i class="bi bi-clock"></i></span>`;
+    } else if (conn.status === 'pending' && conn.direction === 'received') {
+      actionBtn = `<a href="/connections/" class="sc-btn-connect received" title="Respond"><i class="bi bi-person-check"></i></a>`;
+    }
+
+    return `
+      <div class="student-card">
+        <div class="sc-avatar">${escHtml(s.initials)}</div>
+        <div class="sc-name">${escHtml(s.display_name)}</div>
+        <div class="sc-username">@${escHtml(s.username)}</div>
+        <div class="sc-tags">${tags.join('')}</div>
+        ${s.bio ? `<div class="sc-bio">${escHtml(s.bio)}</div>` : ''}
+        <div class="sc-actions">
+          <a href="/students/${s.username}/" class="sc-btn-view">View Profile</a>
+          ${actionBtn}
+        </div>
+      </div>`;
+  }
+
+  function buildSkeleton(n) {
+    const card = `<div class="skel-card"><div class="skel" style="width:64px;height:64px;border-radius:20px;"></div><div class="skel" style="width:70%;height:14px;"></div><div class="skel" style="width:45%;height:11px;"></div><div class="skel" style="width:90%;height:30px;border-radius:50px;"></div><div class="skel" style="width:100%;height:36px;border-radius:9px;"></div></div>`;
+    return `<div class="skeleton-grid">${card.repeat(n)}</div>`;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+{% endblock %}

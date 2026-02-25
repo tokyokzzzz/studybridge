@@ -1,0 +1,592 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account — StudyBridge{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: var(--light-gray); }
+
+  .auth-page {
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* Left Panel */
+  .auth-left {
+    background: var(--gradient-hero);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 50px;
+  }
+
+  .auth-left::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 70% at 20% 30%, rgba(37,99,235,0.3) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 70%, rgba(124,58,237,0.25) 0%, transparent 60%);
+  }
+
+  .auth-left-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .auth-left-content { position: relative; z-index: 2; }
+
+  .auth-brand {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--white);
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 3rem;
+  }
+  .auth-brand span {
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .auth-tagline {
+    font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1.2;
+    letter-spacing: -0.75px;
+    margin-bottom: 1.25rem;
+  }
+  .auth-tagline span {
+    background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .auth-desc {
+    color: rgba(255,255,255,0.65);
+    font-size: 0.95rem;
+    line-height: 1.75;
+    margin-bottom: 2.5rem;
+    max-width: 360px;
+  }
+
+  .auth-feature-list { list-style: none; padding: 0; margin: 0; }
+  .auth-feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: rgba(255,255,255,0.8);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.875rem;
+  }
+  .auth-feature-list li .check {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: rgba(74,222,128,0.15);
+    border: 1px solid rgba(74,222,128,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4ade80;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .progress-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .progress-step {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+  }
+
+  .progress-step .step-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.6);
+  }
+
+  .progress-step .step-icon.active {
+    background: var(--primary);
+    color: var(--white);
+  }
+
+  .progress-step .step-text {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .progress-step .step-text.active { color: rgba(255,255,255,0.9); font-weight: 500; }
+
+  /* Right Panel */
+  .auth-right {
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 50px;
+    overflow-y: auto;
+  }
+
+  .auth-form-container { max-width: 480px; width: 100%; }
+
+  .auth-form-header { margin-bottom: 2rem; }
+  .auth-form-header h2 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.75px;
+    margin-bottom: 0.5rem;
+  }
+  .auth-form-header p {
+    color: var(--gray);
+    font-size: 0.9rem;
+  }
+
+  /* Section dividers */
+  .form-section-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.75px;
+    color: #94a3b8;
+    margin: 1.5rem 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .form-section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .form-group { margin-bottom: 1.1rem; }
+
+  .input-wrapper { position: relative; }
+  .input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray);
+    font-size: 0.95rem;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .input-wrapper .form-control { padding-left: 2.75rem; }
+
+  .toggle-password {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    z-index: 5;
+    font-size: 1rem;
+    transition: color 0.2s;
+  }
+  .toggle-password:hover { color: var(--primary); }
+
+  .btn-submit {
+    width: 100%;
+    background: var(--gradient-primary);
+    color: var(--white);
+    border: none;
+    padding: 0.9rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(37, 99, 235, 0.45);
+  }
+
+  .optional-tag {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    font-weight: 400;
+    background: var(--light-gray);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin-left: 0.25rem;
+  }
+
+  .field-error {
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 0.375rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .password-strength {
+    margin-top: 0.5rem;
+  }
+  .strength-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+  }
+  .strength-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease, background 0.3s ease;
+    width: 0%;
+  }
+  .strength-text {
+    font-size: 0.75rem;
+    color: var(--gray);
+  }
+
+  .auth-switch {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--gray);
+  }
+  .auth-switch a {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .auth-switch a:hover { text-decoration: underline; }
+
+  .terms-check {
+    font-size: 0.82rem;
+    color: var(--gray);
+    margin-bottom: 1.25rem;
+  }
+  .terms-check a { color: var(--primary); font-weight: 500; }
+  .form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  @media (max-width: 991px) {
+    .auth-left { display: none; }
+    .auth-right { padding: 40px 24px; min-height: 100vh; }
+    .auth-form-container { margin: 0 auto; }
+  }
+  @media (max-width: 575px) {
+    .auth-right { padding: 100px 20px 40px; }
+  }
+</style>
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar fixed-top" id="mainNav" style="background: transparent;">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'landing' %}">Study<span>Bridge</span></a>
+    <a href="{% url 'landing' %}" class="d-flex align-items-center gap-2 text-white-50 text-decoration-none" style="font-size:0.875rem;">
+      <i class="bi bi-arrow-left"></i> Back to Home
+    </a>
+  </div>
+</nav>
+{% endblock navbar %}
+
+{% block content %}
+<div class="auth-page">
+
+  <!-- Left Panel -->
+  <div class="col-lg-5 auth-left d-none d-lg-flex">
+    <div class="auth-left-grid"></div>
+    <div class="auth-left-content">
+      <a href="{% url 'landing' %}" class="auth-brand">Study<span>Bridge</span></a>
+
+      <h2 class="auth-tagline">
+        Start your<br /><span>global student</span><br />journey today.
+      </h2>
+      <p class="auth-desc">
+        Join 50,000+ students worldwide. Find peers at your dream university, get insider tips, and build friendships before you even arrive.
+      </p>
+
+      <ul class="auth-feature-list">
+        <li>
+          <span class="check"><i class="bi bi-check-lg"></i></span>
+          Free forever — no hidden costs
+        </li>
+        <li>
+          <span class="check"><i class="bi bi-check-lg"></i></span>
+          Join in under 2 minutes
+        </li>
+        <li>
+          <span class="check"><i class="bi bi-check-lg"></i></span>
+          Connect with students at your university
+        </li>
+        <li>
+          <span class="check"><i class="bi bi-check-lg"></i></span>
+          Verified community — safe & trusted
+        </li>
+      </ul>
+
+      <div class="progress-steps">
+        <div class="progress-step">
+          <div class="step-icon active"><i class="bi bi-person-fill"></i></div>
+          <div class="step-text active">Create your profile</div>
+        </div>
+        <div class="progress-step">
+          <div class="step-icon"><i class="bi bi-mortarboard-fill"></i></div>
+          <div class="step-text">Verify your university</div>
+        </div>
+        <div class="progress-step">
+          <div class="step-icon"><i class="bi bi-people-fill"></i></div>
+          <div class="step-text">Connect with students</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel (Form) -->
+  <div class="col-lg-7 auth-right">
+    <div class="auth-form-container">
+
+      <div class="auth-form-header">
+        <h2>Create your account</h2>
+        <p>Already have an account? <a href="{% url 'login' %}" style="color:var(--primary);font-weight:600;text-decoration:none;">Sign in instead</a></p>
+      </div>
+
+      <!-- Form-level errors -->
+      {% if form.non_field_errors %}
+      <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius);padding:0.875rem 1rem;margin-bottom:1.25rem;display:flex;gap:0.625rem;">
+        <i class="bi bi-exclamation-circle-fill" style="color:#ef4444;flex-shrink:0;margin-top:1px;"></i>
+        <span style="color:#b91c1c;font-size:0.875rem;">{% for error in form.non_field_errors %}{{ error }}{% endfor %}</span>
+      </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="form-section-label">Account Details</div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrapper">
+            <i class="bi bi-envelope input-icon"></i>
+            {{ form.email }}
+          </div>
+          {% if form.email.errors %}
+          <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ form.email.errors|join:", " }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Full Name + Username (row) -->
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <div class="input-wrapper">
+                <i class="bi bi-person input-icon"></i>
+                {{ form.full_name }}
+              </div>
+              {% if form.full_name.errors %}
+              <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ form.full_name.errors|join:", " }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <div class="input-wrapper">
+                <i class="bi bi-at input-icon"></i>
+                {{ form.username }}
+              </div>
+              {% if form.username.errors %}
+              <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ form.username.errors|join:", " }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section-label">Where Are You From? <span class="optional-tag">Optional</span></div>
+
+        <!-- Countries -->
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label class="form-label">Country of Origin</label>
+              <div class="input-wrapper">
+                <i class="bi bi-flag input-icon"></i>
+                {{ form.country_of_origin }}
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label class="form-label">Studying In</label>
+              <div class="input-wrapper">
+                <i class="bi bi-geo-alt input-icon"></i>
+                {{ form.current_country }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section-label">Password</div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label">Create Password</label>
+          <div class="input-wrapper">
+            <i class="bi bi-lock input-icon"></i>
+            {{ form.password1 }}
+            <button type="button" class="toggle-password" onclick="togglePassword('{{ form.password1.id_for_label }}', this)">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          <div class="password-strength">
+            <div class="strength-bar">
+              <div class="strength-fill" id="strengthFill"></div>
+            </div>
+            <div class="strength-text" id="strengthText">Enter a password</div>
+          </div>
+          {% if form.password1.errors %}
+          <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ form.password1.errors|join:", " }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <div class="input-wrapper">
+            <i class="bi bi-lock-fill input-icon"></i>
+            {{ form.password2 }}
+            <button type="button" class="toggle-password" onclick="togglePassword('{{ form.password2.id_for_label }}', this)">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          {% if form.password2.errors %}
+          <div class="field-error"><i class="bi bi-exclamation-circle"></i> {{ form.password2.errors|join:", " }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Terms -->
+        <div class="form-check terms-check mb-3 mt-2">
+          <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+          <label class="form-check-label" for="agreeTerms">
+            I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. I'm at least 16 years old.
+          </label>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <i class="bi bi-rocket-takeoff"></i> Create My Free Account
+        </button>
+      </form>
+
+      <div class="auth-switch">
+        Already on StudyBridge? <a href="{% url 'login' %}">Sign in here</a>
+      </div>
+
+      <p style="text-align:center;font-size:0.75rem;color:#94a3b8;margin-top:1rem;">
+        🔒 Your data is encrypted and never shared with third parties.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function togglePassword(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.replace('bi-eye-slash', 'bi-eye');
+    }
+  }
+
+  // Password strength meter
+  const pwInput = document.getElementById('{{ form.password1.id_for_label }}');
+  const fill = document.getElementById('strengthFill');
+  const text = document.getElementById('strengthText');
+
+  if (pwInput) {
+    pwInput.addEventListener('input', () => {
+      const val = pwInput.value;
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const levels = [
+        { w: '0%', c: '#ef4444', t: 'Too short' },
+        { w: '25%', c: '#ef4444', t: 'Weak' },
+        { w: '50%', c: '#f59e0b', t: 'Fair' },
+        { w: '75%', c: '#3b82f6', t: 'Good' },
+        { w: '100%', c: '#10b981', t: 'Strong ✓' },
+      ];
+
+      const level = val.length === 0 ? levels[0] : levels[score];
+      fill.style.width = level.w;
+      fill.style.background = level.c;
+      text.textContent = val.length === 0 ? 'Enter a password' : level.t;
+      text.style.color = level.c;
+    });
+  }
+
+  // Terms checkbox validation
+  const form = document.querySelector('form');
+  const terms = document.getElementById('agreeTerms');
+  form.addEventListener('submit', (e) => {
+    if (!terms.checked) {
+      e.preventDefault();
+      terms.style.outline = '2px solid #ef4444';
+      terms.style.outlineOffset = '2px';
+      terms.nextElementSibling.style.color = '#ef4444';
+      setTimeout(() => {
+        terms.style.outline = '';
+        terms.nextElementSibling.style.color = '';
+      }, 3000);
+    }
+  });
+</script>
+{% endblock %}

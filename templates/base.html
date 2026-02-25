@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}StudyBridge — Connect with Students Abroad{% endblock %}</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+  <!-- Animate.css -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #3b82f6;
+      --secondary: #7c3aed;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --dark: #0f172a;
+      --dark-secondary: #1e293b;
+      --gray: #64748b;
+      --light-gray: #f1f5f9;
+      --border: #e2e8f0;
+      --white: #ffffff;
+      --gradient-primary: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      --gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e1b4b 100%);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+      --shadow-lg: 0 10px 40px rgba(0,0,0,.15), 0 4px 12px rgba(0,0,0,.08);
+      --shadow-xl: 0 20px 60px rgba(0,0,0,.20);
+      --radius: 12px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--dark);
+      background: var(--white);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--light-gray); }
+    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+
+    /* Navbar */
+    .navbar {
+      padding: 1rem 0;
+      transition: all 0.3s ease;
+      background: transparent;
+    }
+
+    .navbar.scrolled {
+      background: rgba(15, 23, 42, 0.95) !important;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+      padding: 0.75rem 0;
+    }
+
+    .navbar-brand {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--white) !important;
+      letter-spacing: -0.5px;
+    }
+
+    .navbar-brand span {
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .navbar-nav .nav-link {
+      color: rgba(255,255,255,0.85) !important;
+      font-weight: 500;
+      font-size: 0.95rem;
+      padding: 0.5rem 1rem !important;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .navbar-nav .nav-link:hover {
+      color: var(--white) !important;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .btn-nav-login {
+      border: 1.5px solid rgba(255,255,255,0.3);
+      color: var(--white) !important;
+      padding: 0.45rem 1.2rem !important;
+      border-radius: 8px;
+    }
+
+    .btn-nav-login:hover {
+      background: rgba(255,255,255,0.15) !important;
+      border-color: rgba(255,255,255,0.6) !important;
+    }
+
+    .btn-nav-signup {
+      background: var(--gradient-primary);
+      color: var(--white) !important;
+      padding: 0.45rem 1.25rem !important;
+      border-radius: 8px;
+      border: none !important;
+      font-weight: 600;
+    }
+
+    .btn-nav-signup:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.5);
+    }
+
+    /* Buttons */
+    .btn-primary-custom {
+      background: var(--gradient-primary);
+      color: var(--white);
+      border: none;
+      padding: 0.85rem 2rem;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-primary-custom:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(37, 99, 235, 0.5);
+      color: var(--white);
+    }
+
+    .btn-outline-custom {
+      background: transparent;
+      color: var(--white);
+      border: 2px solid rgba(255,255,255,0.4);
+      padding: 0.85rem 2rem;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-outline-custom:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.8);
+      color: var(--white);
+    }
+
+    /* Form Controls */
+    .form-control {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      background: var(--white);
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+      outline: none;
+    }
+
+    .form-control.is-invalid {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+    }
+
+    .form-label {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--dark-secondary);
+      margin-bottom: 0.4rem;
+    }
+
+    /* Alerts */
+    .alert {
+      border: none;
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      font-size: 0.9rem;
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--dark);
+      color: rgba(255,255,255,0.7);
+      padding: 4rem 0 2rem;
+    }
+
+    .footer h5 {
+      color: var(--white);
+      font-size: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .footer a {
+      color: rgba(255,255,255,0.6);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .footer a:hover { color: var(--white); }
+
+    .footer-brand {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--white);
+    }
+
+    .footer-brand span {
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .footer-divider {
+      border-color: rgba(255,255,255,0.1);
+      margin: 2.5rem 0 1.5rem;
+    }
+
+    .social-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.7) !important;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+    }
+
+    .social-link:hover {
+      background: var(--primary);
+      color: var(--white) !important;
+      transform: translateY(-2px);
+    }
+
+    /* Toast / Messages */
+    .messages-container {
+      position: fixed;
+      top: 90px;
+      right: 20px;
+      z-index: 9999;
+      min-width: 320px;
+    }
+
+    .toast-msg {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      animation: slideInRight 0.3s ease;
+      border-left: 4px solid var(--primary);
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(100px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .toast-msg.success { border-color: var(--success); }
+    .toast-msg.error { border-color: #ef4444; }
+    .toast-msg.info { border-color: var(--accent); }
+
+    /* Misc Utilities */
+    .text-gradient {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .bg-gradient-primary { background: var(--gradient-primary); }
+
+    .badge-custom {
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Django Messages -->
+  {% if messages %}
+  <div class="messages-container">
+    {% for message in messages %}
+    <div class="toast-msg {% if message.tags %}{{ message.tags }}{% endif %}" id="toast-{{ forloop.counter }}">
+      <i class="bi {% if 'success' in message.tags %}bi-check-circle-fill text-success{% elif 'error' in message.tags %}bi-x-circle-fill text-danger{% else %}bi-info-circle-fill text-info{% endif %}"></i>
+      <span>{{ message }}</span>
+      <button type="button" class="btn-close btn-close-sm ms-auto" onclick="this.parentElement.remove()"></button>
+    </div>
+    {% endfor %}
+  </div>
+  <script>
+    setTimeout(() => {
+      document.querySelectorAll('.toast-msg').forEach(t => {
+        t.style.transition = 'opacity 0.5s';
+        t.style.opacity = '0';
+        setTimeout(() => t.remove(), 500);
+      });
+    }, 5000);
+  </script>
+  {% endif %}
+
+  <!-- Navbar -->
+  {% block navbar %}
+  <nav class="navbar navbar-expand-lg fixed-top" id="mainNav">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'landing' %}">
+        Study<span>Bridge</span>
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <i class="bi bi-list text-white fs-4"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto ms-4">
+          <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+          <li class="nav-item"><a class="nav-link" href="#how-it-works">How It Works</a></li>
+          <li class="nav-item"><a class="nav-link" href="#universities">Universities</a></li>
+          <li class="nav-item"><a class="nav-link" href="#community">Community</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2">
+          {% if user.is_authenticated %}
+            <span class="text-white-50 me-1">Hi, {{ user.get_display_name }}</span>
+            <a href="{% url 'logout' %}" class="btn-nav-login nav-link">Logout</a>
+          {% else %}
+            <a href="{% url 'login' %}" class="btn-nav-login nav-link">Sign In</a>
+            <a href="{% url 'signup' %}" class="btn-nav-signup nav-link">Get Started</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+  {% endblock navbar %}
+
+  {% block content %}{% endblock %}
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="row g-5">
+        <div class="col-lg-4">
+          <div class="footer-brand mb-3">Study<span>Bridge</span></div>
+          <p class="text-white-50 mb-4" style="font-size:0.9rem; line-height:1.7;">
+            Connecting international students worldwide. Find peers, share experiences, and navigate your study abroad journey with confidence.
+          </p>
+          <div class="d-flex gap-2">
+            <a href="#" class="social-link"><i class="bi bi-twitter-x"></i></a>
+            <a href="#" class="social-link"><i class="bi bi-instagram"></i></a>
+            <a href="#" class="social-link"><i class="bi bi-linkedin"></i></a>
+            <a href="#" class="social-link"><i class="bi bi-discord"></i></a>
+          </div>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h5>Platform</h5>
+          <ul class="list-unstyled d-flex flex-column gap-2">
+            <li><a href="#">Find Students</a></li>
+            <li><a href="#">Universities</a></li>
+            <li><a href="#">Chat</a></li>
+            <li><a href="#">Forums</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h5>Resources</h5>
+          <ul class="list-unstyled d-flex flex-column gap-2">
+            <li><a href="#">Visa Guides</a></li>
+            <li><a href="#">Scholarships</a></li>
+            <li><a href="#">Housing Tips</a></li>
+            <li><a href="#">Blog</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h5>Company</h5>
+          <ul class="list-unstyled d-flex flex-column gap-2">
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Press</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h5>Legal</h5>
+          <ul class="list-unstyled d-flex flex-column gap-2">
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Use</a></li>
+            <li><a href="#">Cookie Policy</a></li>
+            <li><a href="#">Safety</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr class="footer-divider" />
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+        <p class="mb-0" style="font-size:0.85rem;">© 2025 StudyBridge. All rights reserved.</p>
+        <p class="mb-0" style="font-size:0.85rem;">Made with <i class="bi bi-heart-fill text-danger"></i> for students worldwide</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Navbar scroll effect -->
+  <script>
+    const nav = document.getElementById('mainNav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 50);
+    });
+    // Trigger once on load
+    if (window.scrollY > 50) nav.classList.add('scrolled');
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

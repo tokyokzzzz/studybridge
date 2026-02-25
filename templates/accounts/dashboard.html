@@ -1,0 +1,189 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Dashboard — StudyBridge{% endblock %}
+
+{% block extra_db_css %}
+<style>
+  .welcome-banner {
+    background: var(--gradient-hero); border-radius: 18px;
+    padding: 1.875rem 2.25rem; margin-bottom: 1.75rem;
+    position: relative; overflow: hidden;
+  }
+  .welcome-banner::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 10% 50%,rgba(37,99,235,.3) 0%,transparent 60%),
+                radial-gradient(ellipse 40% 60% at 90% 20%,rgba(124,58,237,.2) 0%,transparent 60%);
+  }
+  .wb-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px); background-size: 28px 28px; }
+  .wb-content { position: relative; z-index: 2; }
+  .wb-badge { display: inline-flex; align-items: center; gap: .4rem; background: rgba(74,222,128,.15); border: 1px solid rgba(74,222,128,.25); color: #4ade80; padding: .28rem .75rem; border-radius: 50px; font-size: .73rem; font-weight: 600; margin-bottom: .8rem; }
+  .wb-title { font-family: 'Plus Jakarta Sans',sans-serif; font-size: clamp(1.3rem,3vw,1.9rem); font-weight: 800; color: #fff; letter-spacing: -.5px; margin-bottom: .4rem; }
+  .wb-sub { color: rgba(255,255,255,.6); font-size: .875rem; }
+  .wb-deco { position: absolute; right: 2rem; top: 50%; transform: translateY(-50%); font-size: 4.5rem; opacity: .12; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 1.75rem; }
+  .stat-card {
+    background: var(--db-surface); border: 1px solid var(--db-border);
+    border-radius: 14px; padding: 1.25rem;
+    display: flex; align-items: center; gap: .875rem;
+    transition: all .25s;
+  }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: var(--db-shadow-md); border-color: rgba(37,99,235,.18); }
+  .stat-icon { width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; }
+  .stat-icon.blue { background: rgba(37,99,235,.1); }
+  .stat-icon.purple { background: rgba(124,58,237,.1); }
+  .stat-icon.green { background: rgba(16,185,129,.1); }
+  .stat-icon.orange { background: rgba(249,115,22,.1); }
+  .stat-num { font-family: 'Plus Jakarta Sans',sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--db-text); line-height: 1; margin-bottom: .2rem; }
+  .stat-lbl { font-size: .77rem; color: var(--db-text-2); font-weight: 500; }
+
+  .content-grid { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; }
+
+  .feature-item { display: flex; align-items: center; gap: .875rem; padding: .8rem 0; border-bottom: 1px solid var(--db-border); }
+  .feature-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .feature-item:first-child { padding-top: 0; }
+  .fi-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+  .fi-name { font-size: .855rem; font-weight: 600; color: var(--db-text); margin-bottom: .12rem; }
+  .fi-desc { font-size: .77rem; color: var(--db-text-2); }
+  .soon-pill { font-size: .67rem; font-weight: 700; padding: .22rem .55rem; border-radius: 50px; background: rgba(37,99,235,.08); color: var(--primary); border: 1px solid rgba(37,99,235,.14); white-space: nowrap; flex-shrink: 0; }
+
+  .activity-item { display: flex; gap: .8rem; padding: .8rem 0; border-bottom: 1px solid var(--db-border); }
+  .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .activity-item:first-child { padding-top: 0; }
+  .act-dot { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: .85rem; flex-shrink: 0; margin-top: 1px; }
+  .act-text { font-size: .82rem; color: var(--db-text); font-weight: 500; line-height: 1.45; margin-bottom: .18rem; }
+  .act-time { font-size: .72rem; color: var(--db-text-3); }
+
+  .profile-bar-card { background: var(--db-surface); border: 1px solid var(--db-border); border-radius: 14px; padding: 1.1rem 1.25rem; margin-bottom: 1.25rem; }
+  .pbar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .75rem; }
+  .pbar-title { font-size: .855rem; font-weight: 700; color: var(--db-text); }
+  .pbar-pct { font-size: .855rem; font-weight: 700; color: var(--primary); }
+  .progress-wrap { background: var(--db-surface-2); border: 1px solid var(--db-border); border-radius: 50px; height: 7px; overflow: hidden; margin-bottom: .7rem; }
+  .progress-fill { height: 100%; background: var(--gradient-primary); border-radius: 50px; transition: width 1s ease; }
+  .pstep { display: flex; align-items: center; gap: .55rem; font-size: .78rem; color: var(--db-text-2); margin-bottom: .4rem; }
+  .pstep:last-child { margin-bottom: 0; }
+  .pchk { width: 17px; height: 17px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .58rem; flex-shrink: 0; }
+  .pchk.done { background: rgba(16,185,129,.15); color: #10b981; border: 1px solid rgba(16,185,129,.3); }
+  .pchk.todo { background: var(--db-surface-2); color: var(--db-text-3); border: 1px solid var(--db-border); }
+
+  .qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .625rem; }
+  .qa-btn {
+    background: var(--db-surface); border: 1.5px solid var(--db-border); border-radius: 11px;
+    padding: .875rem .75rem; text-align: center; cursor: pointer; transition: all .2s;
+    text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: .35rem;
+  }
+  .qa-btn:hover { border-color: rgba(37,99,235,.3); background: rgba(37,99,235,.03); transform: translateY(-2px); }
+  .qa-ico { font-size: 1.2rem; }
+  .qa-lbl { font-size: .75rem; font-weight: 600; color: var(--db-text); }
+
+  @media(max-width:1100px) { .content-grid { grid-template-columns: 1fr; } .wb-deco { display: none; } }
+  @media(max-width:768px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<!-- Welcome banner -->
+<div class="welcome-banner">
+  <div class="wb-grid"></div>
+  <div class="wb-deco">🌍</div>
+  <div class="wb-content">
+    <div class="wb-badge"><span style="width:7px;height:7px;background:#4ade80;border-radius:50%;"></span> Active</div>
+    <h1 class="wb-title">Welcome back, {{ user.get_display_name }}! 👋</h1>
+    <p class="wb-sub">Your global student journey starts here.</p>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="bi bi-people-fill" style="color:var(--primary);"></i></div>
+    <div><div class="stat-num">0</div><div class="stat-lbl">Connections</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon purple"><i class="bi bi-chat-dots-fill" style="color:#7c3aed;"></i></div>
+    <div><div class="stat-num">0</div><div class="stat-lbl">Messages</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="bi bi-building-fill" style="color:#10b981;"></i></div>
+    <div><div class="stat-num">800+</div><div class="stat-lbl">Universities</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon orange"><i class="bi bi-globe2" style="color:#f97316;"></i></div>
+    <div><div class="stat-num">120</div><div class="stat-lbl">Countries</div></div>
+  </div>
+</div>
+
+<!-- Content grid -->
+<div class="content-grid">
+  <div>
+    <!-- Features -->
+    <div class="db-card" style="margin-bottom:1.5rem;">
+      <div class="db-card-header">
+        <div class="db-card-title"><i class="bi bi-rocket-takeoff-fill"></i> Platform Features</div>
+      </div>
+      <div class="db-card-body" style="padding-top:.4rem;">
+        <div class="feature-item"><div class="fi-icon" style="background:rgba(37,99,235,.08);">🔍</div><div><div class="fi-name">Find Students</div><div class="fi-desc">Search by university, country, or field</div></div><a href="{% url 'find_students' %}" style="margin-left:auto;padding:.35rem .8rem;background:var(--primary);color:#fff;border-radius:8px;font-size:.78rem;font-weight:600;text-decoration:none;">Explore</a></div>
+        <div class="feature-item"><div class="fi-icon" style="background:rgba(124,58,237,.08);">💬</div><div><div class="fi-name">Real-Time Chat</div><div class="fi-desc">Message connected students instantly</div></div><a href="{% url 'connections' %}" style="margin-left:auto;padding:.35rem .8rem;background:rgba(124,58,237,.1);color:#7c3aed;border-radius:8px;font-size:.78rem;font-weight:600;text-decoration:none;border:1px solid rgba(124,58,237,.2);">Open</a></div>
+        <div class="feature-item"><div class="fi-icon" style="background:rgba(6,182,212,.08);">🏛️</div><div><div class="fi-name">University Guide</div><div class="fi-desc">800+ detailed university profiles</div></div><span class="soon-pill">Soon</span></div>
+        <div class="feature-item"><div class="fi-icon" style="background:rgba(16,185,129,.08);">🗺️</div><div><div class="fi-name">Country Guides</div><div class="fi-desc">Visa, housing, cost of living</div></div><span class="soon-pill">Soon</span></div>
+        <div class="feature-item"><div class="fi-icon" style="background:rgba(249,115,22,.08);">🎓</div><div><div class="fi-name">Scholarships</div><div class="fi-desc">Find funding matched to your profile</div></div><span class="soon-pill">Soon</span></div>
+      </div>
+    </div>
+    <!-- Activity -->
+    <div class="db-card">
+      <div class="db-card-header">
+        <div class="db-card-title"><i class="bi bi-activity"></i> Recent Activity</div>
+      </div>
+      <div class="db-card-body" style="padding-top:.4rem;">
+        <div class="activity-item"><div class="act-dot" style="background:rgba(37,99,235,.1);">🎉</div><div><div class="act-text">Welcome to StudyBridge! Your account is ready.</div><div class="act-time">Just now</div></div></div>
+        <div class="activity-item"><div class="act-dot" style="background:rgba(16,185,129,.1);">✅</div><div><div class="act-text">Profile created. Complete it to appear in searches.</div><div class="act-time">{{ user.date_joined|timesince }} ago</div></div></div>
+        <div class="activity-item"><div class="act-dot" style="background:rgba(249,115,22,.1);">🌍</div><div><div class="act-text">You joined <strong>50,000+</strong> international students worldwide.</div><div class="act-time">{{ user.date_joined|date:"M d, Y" }}</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right column -->
+  <div>
+    <div class="profile-bar-card">
+      <div class="pbar-header"><div class="pbar-title">Profile Completeness</div><div class="pbar-pct" id="dbPct">—</div></div>
+      <div class="progress-wrap"><div class="progress-fill" id="dbBar" style="width:0;"></div></div>
+      <div>
+        <div class="pstep"><div class="pchk done"><i class="bi bi-check-lg"></i></div> Account created</div>
+        <div class="pstep"><div class="pchk {% if user.full_name %}done{% else %}todo{% endif %}">{% if user.full_name %}<i class="bi bi-check-lg"></i>{% else %}—{% endif %}</div> Full name added</div>
+        <div class="pstep"><div class="pchk {% if user.country_of_origin %}done{% else %}todo{% endif %}">{% if user.country_of_origin %}<i class="bi bi-check-lg"></i>{% else %}—{% endif %}</div> Country of origin</div>
+        <div class="pstep"><div class="pchk {% if user.current_country %}done{% else %}todo{% endif %}">{% if user.current_country %}<i class="bi bi-check-lg"></i>{% else %}—{% endif %}</div> Destination country</div>
+        <div class="pstep"><div class="pchk {% if user.university %}done{% else %}todo{% endif %}">{% if user.university %}<i class="bi bi-check-lg"></i>{% else %}—{% endif %}</div> University added</div>
+        <div class="pstep"><div class="pchk {% if user.bio %}done{% else %}todo{% endif %}">{% if user.bio %}<i class="bi bi-check-lg"></i>{% else %}—{% endif %}</div> Bio written</div>
+      </div>
+      <a href="#" class="dd-logout" style="margin-top:.875rem;display:flex;align-items:center;justify-content:center;gap:.4rem;background:var(--gradient-primary);color:#fff;border:none;border-radius:9px;padding:.65rem;font-size:.83rem;font-weight:600;text-decoration:none;">
+        <i class="bi bi-pencil-fill"></i> Complete Profile
+      </a>
+    </div>
+
+    <div class="db-card">
+      <div class="db-card-header"><div class="db-card-title"><i class="bi bi-lightning-charge-fill"></i> Quick Actions</div></div>
+      <div class="db-card-body">
+        <div class="qa-grid">
+          <a href="{% url 'find_students' %}" class="qa-btn"><div class="qa-ico">🔍</div><div class="qa-lbl">Find Students</div></a>
+          <a href="{% url 'connections' %}" class="qa-btn"><div class="qa-ico">💬</div><div class="qa-lbl">Messages</div></a>
+          <a href="{% url 'connections' %}" class="qa-btn"><div class="qa-ico">🤝</div><div class="qa-lbl">Network</div></a>
+          <a href="#" class="qa-btn"><div class="qa-ico">📚</div><div class="qa-lbl">Resources</div></a>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(37,99,235,.07),rgba(124,58,237,.07));border:1px solid rgba(37,99,235,.14);border-radius:14px;padding:1.1rem;margin-top:1.25rem;">
+      <div style="display:flex;gap:.7rem;align-items:flex-start;"><div style="font-size:1.3rem;">💡</div><div><div style="font-size:.84rem;font-weight:700;color:var(--db-text);margin-bottom:.25rem;">Pro Tip</div><div style="font-size:.78rem;color:var(--db-text-2);line-height:1.55;">Complete your profile to appear in search results and connect with relevant students at your university.</div></div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_db_js %}
+<script>
+  const done = document.querySelectorAll('.pchk.done').length;
+  const total = document.querySelectorAll('.pchk').length;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('dbBar').style.width = pct + '%';
+  document.getElementById('dbPct').textContent = pct + '%';
+</script>
+{% endblock %}
