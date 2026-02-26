@@ -112,7 +112,7 @@
     align-items: center; padding: 2rem 1.5rem 1.25rem;
   }
 
-  .gauge-svg { width: 200px; height: 120px; overflow: visible; }
+  .gauge-svg { width: 200px; height: 110px; overflow: visible; }
 
   .gauge-track {
     fill: none;
@@ -128,13 +128,13 @@
     transition: stroke-dashoffset .9s cubic-bezier(.4,0,.2,1), stroke .5s;
   }
 
-  .gauge-pct {
+  /* Percentage lives outside the SVG now, between arc and tier badge */
+  .gauge-number {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 2.5rem; font-weight: 800;
-    text-anchor: middle;
-    dominant-baseline: central;
-    fill: var(--db-text);
-    transition: fill .5s;
+    font-size: 2.8rem; font-weight: 800;
+    line-height: 1;
+    margin: .6rem 0 .2rem;
+    transition: color .5s;
   }
 
   .gauge-label {
@@ -389,19 +389,20 @@
           {% else %}
             <!-- Gauge -->
             <div class="gauge-wrap">
-              <svg class="gauge-svg" viewBox="0 0 200 120">
+              <svg class="gauge-svg" viewBox="0 0 200 110">
                 <!-- Track arc (half circle) -->
                 <path class="gauge-track"
-                      d="M 20 110 A 80 80 0 0 1 180 110" />
+                      d="M 20 100 A 80 80 0 0 1 180 100" />
                 <!-- Fill arc -->
                 <path class="gauge-fill" id="gaugeFill"
-                      d="M 20 110 A 80 80 0 0 1 180 110"
+                      d="M 20 100 A 80 80 0 0 1 180 100"
                       style="stroke:{{ result.tier_color }};" />
-                <!-- Center text -->
-                <text class="gauge-pct" x="100" y="88"
-                      style="fill:{{ result.tier_color }};">{{ result.probability }}%</text>
-                <text class="gauge-label" x="100" y="108">Acceptance Rate</text>
+                <!-- Small label inside arc -->
+                <text class="gauge-label" x="100" y="88">Acceptance Rate</text>
               </svg>
+
+              <!-- Percentage number sits between the arc and the tier badge -->
+              <div class="gauge-number" style="color:{{ result.tier_color }};">{{ result.probability }}%</div>
 
               <span class="tier-badge"
                     style="color:{{ result.tier_color }};border-color:{{ result.tier_color }};background:{{ result.tier_color }}18;">
@@ -519,7 +520,7 @@
     const arcLen = Math.PI * 80; // ≈ 251.3
 
     // Read the probability baked into the DOM
-    const pctText = document.querySelector('.gauge-pct');
+    const pctText = document.querySelector('.gauge-number');
     const pct = pctText ? parseFloat(pctText.textContent) : 0;
 
     const filled = (pct / 100) * arcLen;

@@ -124,6 +124,25 @@
     color: var(--text-primary);
   }
 
+  /* Dark mode: force select/input backgrounds to dark so text stays readable */
+  body.dark-mode .form-control,
+  body.dark-mode .form-select {
+    background-color: #1e293b;
+    color: #f1f5f9;
+    border-color: rgba(255,255,255,0.1);
+  }
+  body.dark-mode .form-control:focus,
+  body.dark-mode .form-select:focus {
+    background-color: #1e293b;
+    border-color: #6366f1;
+    color: #f1f5f9;
+  }
+  /* Dropdown option items inside dark-mode selects */
+  body.dark-mode .form-select option {
+    background-color: #1e293b;
+    color: #f1f5f9;
+  }
+
   .form-control::placeholder {
     color: var(--text-muted);
     opacity: .7;
