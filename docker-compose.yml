@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+
+  # ── PostgreSQL database ───────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: studybridge
+      POSTGRES_USER: studybridge_user
+      POSTGRES_PASSWORD: "7001070036"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Health-check so the web container waits until Postgres is actually ready
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studybridge_user -d studybridge"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # ── Django application ────────────────────────────────────────────────
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist user-uploaded media files across container rebuilds
+      - media_files:/app/media
+    environment:
+      DB_HOST: db
+      DB_NAME: studybridge
+      DB_USER: studybridge_user
+      DB_PASSWORD: "7001070036"
+      DB_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:   # PostgreSQL data — survives container restarts
+  media_files:     # Uploaded avatars, university photos, etc.

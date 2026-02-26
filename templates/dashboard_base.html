@@ -157,17 +157,6 @@
   .toggle-knob { position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; transition: transform .3s cubic-bezier(.4,0,.2,1); box-shadow: 0 1px 4px rgba(0,0,0,.2); }
   .toggle-sw.on .toggle-knob { transform: translateX(15px); }
 
-  /* Notif bell */
-  .notif-btn {
-    width: 38px; height: 38px; border-radius: 9px;
-    border: 1.5px solid var(--db-border); background: var(--db-surface);
-    color: var(--db-text-2); cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: .95rem; transition: all .2s; position: relative;
-  }
-  .notif-btn:hover { background: var(--db-surface-2); color: var(--db-text); }
-  .notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 1.5px solid var(--db-surface); }
-
   /* Avatar btn */
   .avatar-btn {
     display: flex; align-items: center; gap: .55rem;
@@ -304,14 +293,11 @@
 
     <div class="sidebar-section-label">Explore</div>
     <a href="{% url 'universities' %}" class="sidebar-link {% if active_page == 'universities' %}active{% endif %}"><i class="bi bi-building-fill"></i> Universities</a>
-    <a href="#" class="sidebar-link"><i class="bi bi-map-fill"></i> Country Guides <span class="sb-badge soon">Soon</span></a>
-    <a href="#" class="sidebar-link"><i class="bi bi-journal-richtext"></i> Forums <span class="sb-badge soon">Soon</span></a>
+    <a href="{% url 'calculator' %}" class="sidebar-link {% if active_page == 'calculator' %}active{% endif %}"><i class="bi bi-graph-up-arrow"></i> Acceptance Calc</a>
     <a href="{% url 'scholarships' %}" class="sidebar-link {% if active_page == 'scholarships' %}active{% endif %}"><i class="bi bi-award-fill"></i> Scholarships</a>
 
     <div class="sidebar-section-label">Account</div>
     <a href="{% url 'edit_profile' %}" class="sidebar-link {% if active_page == 'profile' %}active{% endif %}"><i class="bi bi-person-fill"></i> My Profile</a>
-    <a href="#" class="sidebar-link"><i class="bi bi-gear-fill"></i> Settings</a>
-    <a href="#" class="sidebar-link"><i class="bi bi-question-circle-fill"></i> Help</a>
   </nav>
 
   <div class="sidebar-footer">
@@ -342,14 +328,6 @@
         <div class="toggle-sw" id="modeSw"><div class="toggle-knob"></div></div>
         <span class="mode-lbl" id="modeLbl">Dark</span>
       </div>
-
-      <!-- Notifications -->
-      <button class="notif-btn" title="Notifications">
-        <i class="bi bi-bell-fill"></i>
-        {% if pending_requests_count > 0 or unread_messages_count > 0 %}
-          <span class="notif-dot"></span>
-        {% endif %}
-      </button>
 
       <!-- Avatar -->
       <div style="position:relative;">
@@ -395,7 +373,6 @@
           <div class="dd-links">
             <a href="{% url 'edit_profile' %}" class="dd-link"><i class="bi bi-person-circle"></i> View Profile</a>
             <a href="{% url 'edit_profile' %}" class="dd-link"><i class="bi bi-pencil-fill"></i> Edit Profile</a>
-            <a href="#" class="dd-link"><i class="bi bi-gear-fill"></i> Settings</a>
             <div class="dd-divider"></div>
             <a href="{% url 'logout' %}" class="dd-logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
           </div>

@@ -1,12 +1,25 @@
 import json
+import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q
+from django.conf import settings
 from .forms import SignUpForm, LoginForm, EditProfileForm, UniversitySubmissionForm, ScholarshipSubmissionForm
 from .models import User, ConnectionRequest, Message, UniversitySubmission, ScholarshipSubmission
+
+# Module-level model cache (loaded once per process)
+_acceptance_model = None
+
+def _load_acceptance_model():
+    global _acceptance_model
+    if _acceptance_model is None:
+        import joblib
+        model_path = os.path.join(settings.BASE_DIR, 'ml_models', 'acceptance_model.joblib')
+        _acceptance_model = joblib.load(model_path)
+    return _acceptance_model
 
 
 # ── Auth ──────────────────────────────────────────────────────────────
@@ -522,3 +535,108 @@ def scholarships_page(request):
     if request.user.is_authenticated:
         return render(request, 'students/scholarships.html', context)
     return render(request, 'students/scholarships_public.html', context)
+
+
+# ── Acceptance Rate Calculator ─────────────────────────────────────────
+
+CALCULATOR_MAJORS = [
+    'Biology', 'Business', 'Computer Science',
+    'Economics', 'Engineering', 'Law',
+]
+CALCULATOR_UNIVERSITIES = [
+    'Cambridge', 'ETH Zurich', 'Harvard', 'MIT',
+    'Oxford', 'Stanford', 'TU Munich', 'UCL',
+]
+
+
+@login_required
+def acceptance_calculator(request):
+    result = None
+    form_data = {}
+
+    if request.method == 'POST':
+        try:
+            import numpy as np
+
+            gpa_value  = float(request.POST.get('gpa_value', 0))
+            gpa_scale  = float(request.POST.get('gpa_scale', 4.0))
+            ielts      = float(request.POST.get('ielts', 0))
+            major      = request.POST.get('major', '').strip()
+            university = request.POST.get('university', '').strip()
+            work_years   = float(request.POST.get('work_years', 0))
+            publications = int(request.POST.get('publications', 0))
+
+            # Derived features
+            gpa_scale = max(gpa_scale, 0.01)  # avoid div-by-zero
+            gpa_normalized   = min(gpa_value / gpa_scale, 1.0)
+            ielts_normalized = min(ielts / 9.0, 1.0)
+            academic_score   = (gpa_normalized + ielts_normalized) / 2.0
+
+            model = _load_acceptance_model()
+            preprocessor = model.named_steps['preprocessing']
+
+            # Apply StandardScaler to numerical features (order must match training):
+            # gpa_normalized, ielts_normalized, academic_score, work_years, publications
+            num_array = np.array([[gpa_normalized, ielts_normalized,
+                                   academic_score, work_years, publications]],
+                                 dtype=float)
+            num_scaled = preprocessor.named_transformers_['num'].transform(num_array)
+
+            # Apply OneHotEncoder to categorical features: major, university
+            cat_array = np.array([[major, university]])
+            cat_encoded = preprocessor.named_transformers_['cat'].transform(cat_array)
+
+            # OneHotEncoder may return a sparse matrix — convert to dense before stacking
+            if hasattr(cat_encoded, 'toarray'):
+                cat_encoded = cat_encoded.toarray()
+
+            # Concatenate in ColumnTransformer definition order: num first, cat second
+            X = np.hstack([num_scaled, cat_encoded])
+
+            proba = model.named_steps['model'].predict_proba(X)[0][1]  # P(accepted)
+            pct   = round(proba * 100, 1)
+
+            if pct >= 70:
+                tier, tier_color = 'Strong', '#10b981'
+            elif pct >= 45:
+                tier, tier_color = 'Moderate', '#f59e0b'
+            else:
+                tier, tier_color = 'Challenging', '#ef4444'
+
+            # Build feedback tips
+            tips = []
+            if gpa_normalized < 0.75:
+                tips.append('Your GPA is below the competitive range. A higher GPA significantly boosts acceptance odds.')
+            if ielts_normalized < 0.78:  # < 7.0
+                tips.append('An IELTS score above 7.0 is typically expected by top universities.')
+            if work_years == 0:
+                tips.append('Professional experience strengthens your application, especially for graduate programs.')
+            if publications == 0:
+                tips.append('Publications or research experience can make your application stand out.')
+            known_unis = set(u.lower() for u in CALCULATOR_UNIVERSITIES)
+            if university.lower() not in known_unis:
+                tips.append(f'"{university}" is not in our training set — the estimate uses a generic university profile.')
+
+            result = {
+                'probability':      pct,
+                'tier':             tier,
+                'tier_color':       tier_color,
+                'gpa_normalized':   round(gpa_normalized * 100, 1),
+                'ielts_normalized': round(ielts_normalized * 100, 1),
+                'academic_score':   round(academic_score * 100, 1),
+                'tips':             tips,
+            }
+            form_data = request.POST
+
+        except Exception as e:
+            result = {'error': str(e)}
+            form_data = request.POST
+
+    return render(request, 'students/calculator.html', {
+        'result':       result,
+        'form_data':    form_data,
+        'majors':       CALCULATOR_MAJORS,
+        'universities': CALCULATOR_UNIVERSITIES,
+        'active_page':  'calculator',
+        'page_title':   'Acceptance Calculator',
+    })

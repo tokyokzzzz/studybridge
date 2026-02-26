@@ -1,0 +1,550 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Acceptance Rate Calculator — StudyBridge{% endblock %}
+
+{% block extra_db_css %}
+<style>
+  /* ── Page layout ── */
+  .calc-grid {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 1100px) { .calc-grid { grid-template-columns: 1fr; } }
+
+  /* ── Card base ── */
+  .calc-card {
+    background: var(--db-surface);
+    border: 1px solid var(--db-border);
+    border-radius: 18px;
+    overflow: hidden;
+    transition: background .3s, border-color .3s;
+  }
+
+  .calc-card-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 1.5rem 1.75rem;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .calc-card-header h5 { color: #fff; font-weight: 700; margin: 0; font-size: 1.05rem; }
+  .calc-card-header p  { color: rgba(255,255,255,.55); margin: .3rem 0 0; font-size: .82rem; }
+
+  .calc-card-body { padding: 1.75rem; }
+
+  /* ── Section label ── */
+  .section-label {
+    font-size: .68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .09em;
+    color: #6366f1; margin-bottom: .75rem;
+    padding-bottom: .35rem;
+    border-bottom: 2px solid rgba(99,102,241,.12);
+  }
+
+  /* ── Form controls ── */
+  .form-label {
+    font-size: .82rem; font-weight: 600;
+    color: var(--db-text-2); margin-bottom: .3rem;
+  }
+  .form-label .req { color: #ef4444; margin-left: .15rem; }
+
+  .form-control, .form-select {
+    background: var(--db-surface-2);
+    border: 1.5px solid var(--db-border);
+    color: var(--db-text);
+    border-radius: 10px;
+    padding: .6rem .85rem;
+    font-size: .875rem;
+    transition: border-color .2s, box-shadow .2s, background .3s;
+    width: 100%;
+  }
+  .form-control:focus, .form-select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+    background: var(--db-surface-2);
+    color: var(--db-text);
+  }
+  .form-control::placeholder { color: var(--db-text-3); opacity: .8; }
+
+  .input-with-hint { position: relative; }
+  .input-range-hint {
+    font-size: .72rem; color: var(--db-text-3);
+    margin-top: .2rem;
+  }
+
+  /* ── Range slider ── */
+  .range-group { display: flex; align-items: center; gap: .85rem; }
+  .range-group input[type=range] {
+    flex: 1; accent-color: #6366f1;
+    height: 6px; cursor: pointer;
+    background: transparent; padding: 0; border: none;
+    box-shadow: none;
+  }
+  .range-group input[type=range]:focus { box-shadow: none; }
+  .range-val {
+    min-width: 52px; text-align: right;
+    font-weight: 700; font-size: .9rem; color: #6366f1;
+  }
+
+  /* ── Submit button ── */
+  .calc-btn {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none; color: #fff;
+    padding: .8rem 2.25rem;
+    border-radius: 10px; font-weight: 700; font-size: .9rem;
+    transition: transform .15s, box-shadow .2s; cursor: pointer;
+    display: inline-flex; align-items: center; gap: .5rem;
+  }
+  .calc-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(99,102,241,.4);
+  }
+
+  /* ═══════════════════════════════════════════
+     RESULT PANEL
+  ═══════════════════════════════════════════ */
+  .result-panel { position: sticky; top: 80px; }
+
+  /* ── Gauge ── */
+  .gauge-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; padding: 2rem 1.5rem 1.25rem;
+  }
+
+  .gauge-svg { width: 200px; height: 120px; overflow: visible; }
+
+  .gauge-track {
+    fill: none;
+    stroke: var(--db-border);
+    stroke-width: 16;
+    stroke-linecap: round;
+  }
+
+  .gauge-fill {
+    fill: none;
+    stroke-width: 16;
+    stroke-linecap: round;
+    transition: stroke-dashoffset .9s cubic-bezier(.4,0,.2,1), stroke .5s;
+  }
+
+  .gauge-pct {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 2.5rem; font-weight: 800;
+    text-anchor: middle;
+    dominant-baseline: central;
+    fill: var(--db-text);
+    transition: fill .5s;
+  }
+
+  .gauge-label {
+    font-size: .72rem; font-weight: 700;
+    text-anchor: middle;
+    dominant-baseline: central;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    fill: var(--db-text-2);
+  }
+
+  .tier-badge {
+    display: inline-flex; align-items: center; gap: .4rem;
+    border-radius: 100px; font-size: .8rem; font-weight: 700;
+    padding: .35rem 1rem; margin-top: .9rem;
+    border: 2px solid; transition: all .5s;
+  }
+
+  /* ── Score bars ── */
+  .score-bars { padding: 0 1.5rem 1.25rem; }
+  .score-bar-row {
+    display: flex; align-items: center; gap: .75rem;
+    margin-bottom: .65rem;
+  }
+  .score-bar-label { font-size: .75rem; font-weight: 600; color: var(--db-text-2); width: 90px; flex-shrink: 0; }
+  .score-bar-track {
+    flex: 1; height: 8px; background: var(--db-border);
+    border-radius: 100px; overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    transition: width .8s cubic-bezier(.4,0,.2,1);
+  }
+  .score-bar-val { font-size: .75rem; font-weight: 700; color: var(--db-text); width: 38px; text-align: right; }
+
+  /* ── Tips ── */
+  .tips-section { padding: 0 1.5rem 1.5rem; }
+  .tip-item {
+    display: flex; align-items: flex-start; gap: .6rem;
+    font-size: .79rem; color: var(--db-text-2);
+    padding: .55rem 0;
+    border-bottom: 1px solid var(--db-border);
+    line-height: 1.5;
+  }
+  .tip-item:last-child { border-bottom: none; }
+  .tip-item i { color: #f59e0b; font-size: .85rem; flex-shrink: 0; margin-top: .1rem; }
+
+  .tip-success {
+    text-align: center; padding: .9rem;
+    color: #059669; font-size: .84rem; font-weight: 600;
+  }
+
+  /* ── Empty state ── */
+  .result-empty {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 2.5rem 1.5rem; text-align: center; gap: .75rem;
+  }
+  .result-empty .re-icon {
+    font-size: 3rem; opacity: .2;
+    color: var(--db-text);
+  }
+  .result-empty p { font-size: .84rem; color: var(--db-text-2); margin: 0; max-width: 240px; }
+
+  /* ── Error ── */
+  .calc-error {
+    background: rgba(239,68,68,.08);
+    border: 1px solid rgba(239,68,68,.25);
+    border-radius: 10px; padding: .85rem 1rem;
+    font-size: .83rem; color: #dc2626;
+    display: flex; align-items: flex-start; gap: .6rem; margin: 1rem 1.5rem;
+  }
+
+  /* ── Info chips ── */
+  .info-chips {
+    display: flex; flex-wrap: wrap; gap: .4rem;
+    padding: .75rem 1.5rem;
+    border-top: 1px solid var(--db-border);
+  }
+  .info-chip {
+    display: inline-flex; align-items: center; gap: .3rem;
+    background: var(--db-surface-2);
+    border: 1px solid var(--db-border);
+    border-radius: 100px; font-size: .7rem; font-weight: 600;
+    color: var(--db-text-2); padding: .2rem .6rem;
+  }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid py-4 px-3 px-md-4">
+
+  <!-- Page header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="mb-1 fw-800" style="color:var(--db-text)">Acceptance Rate Calculator</h4>
+      <p class="mb-0" style="color:var(--db-text-2);font-size:.875rem">
+        Estimate your probability of acceptance based on your academic profile
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span style="font-size:.75rem;color:var(--db-text-3);display:flex;align-items:center;gap:.3rem;">
+        <i class="bi bi-robot"></i>Powered by ML
+      </span>
+    </div>
+  </div>
+
+  <div class="calc-grid">
+
+    <!-- ════════════ LEFT: FORM ════════════ -->
+    <div>
+      <form method="POST" id="calcForm">
+        {% csrf_token %}
+
+        <!-- Academic Profile -->
+        <div class="calc-card mb-4">
+          <div class="calc-card-header">
+            <h5><i class="bi bi-mortarboard-fill me-2"></i>Your Academic Profile</h5>
+            <p>Enter your academic details to get a personalised estimate</p>
+          </div>
+          <div class="calc-card-body">
+            <p class="section-label"><i class="bi bi-bar-chart-line me-1"></i>GPA</p>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label">GPA Value <span class="req">*</span></label>
+                <div class="range-group">
+                  <input type="range" id="gpaRange" min="0" max="10" step="0.1"
+                         value="{{ form_data.gpa_value|default:'3.5' }}"
+                         oninput="syncRange('gpaRange','gpaInput')">
+                  <input type="number" id="gpaInput" name="gpa_value"
+                         min="0" max="10" step="0.01"
+                         value="{{ form_data.gpa_value|default:'3.5' }}"
+                         class="form-control" style="width:90px;flex-shrink:0;"
+                         oninput="syncInput('gpaInput','gpaRange')">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">GPA Scale <span class="req">*</span></label>
+                <input type="number" name="gpa_scale" class="form-control"
+                       min="1" max="20" step="0.1"
+                       value="{{ form_data.gpa_scale|default:'4.0' }}"
+                       placeholder="e.g. 4.0, 5.0, 10.0">
+                <div class="input-range-hint">Common: 4.0 (US), 5.0, 10.0 (India)</div>
+              </div>
+            </div>
+
+            <p class="section-label"><i class="bi bi-translate me-1"></i>Language Proficiency</p>
+            <div class="row g-3 mb-4">
+              <div class="col-12">
+                <label class="form-label">IELTS Score <span class="req">*</span></label>
+                <div class="range-group">
+                  <input type="range" id="ieltsRange" min="0" max="9" step="0.5"
+                         value="{{ form_data.ielts|default:'7.0' }}"
+                         oninput="syncRange('ieltsRange','ieltsInput')">
+                  <input type="number" id="ieltsInput" name="ielts"
+                         min="0" max="9" step="0.5"
+                         value="{{ form_data.ielts|default:'7.0' }}"
+                         class="form-control" style="width:90px;flex-shrink:0;"
+                         oninput="syncInput('ieltsInput','ieltsRange')">
+                </div>
+                <div class="input-range-hint">Band score 0.0 – 9.0. Most universities require 6.5+.</div>
+              </div>
+            </div>
+
+            <p class="section-label"><i class="bi bi-building-fill-gear me-1"></i>Target Program</p>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Target Major <span class="req">*</span></label>
+                <select name="major" class="form-select">
+                  {% for m in majors %}
+                    <option value="{{ m }}" {% if form_data.major == m %}selected{% endif %}>{{ m }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Target University <span class="req">*</span></label>
+                <select name="university" class="form-select">
+                  {% for u in universities %}
+                    <option value="{{ u }}" {% if form_data.university == u %}selected{% endif %}>{{ u }}</option>
+                  {% endfor %}
+                </select>
+                <div class="input-range-hint">8 top global universities in our model</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Experience -->
+        <div class="calc-card mb-4">
+          <div class="calc-card-header">
+            <h5><i class="bi bi-briefcase-fill me-2"></i>Experience & Research</h5>
+            <p>Additional factors that influence admission decisions</p>
+          </div>
+          <div class="calc-card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Work Experience (Years)</label>
+                <div class="range-group">
+                  <input type="range" id="workRange" min="0" max="20" step="1"
+                         value="{{ form_data.work_years|default:'0' }}"
+                         oninput="syncRange('workRange','workInput')">
+                  <input type="number" id="workInput" name="work_years"
+                         min="0" max="20" step="1"
+                         value="{{ form_data.work_years|default:'0' }}"
+                         class="form-control" style="width:90px;flex-shrink:0;"
+                         oninput="syncInput('workInput','workRange')">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Number of Publications</label>
+                <div class="range-group">
+                  <input type="range" id="pubRange" min="0" max="20" step="1"
+                         value="{{ form_data.publications|default:'0' }}"
+                         oninput="syncRange('pubRange','pubInput')">
+                  <input type="number" id="pubInput" name="publications"
+                         min="0" max="20" step="1"
+                         value="{{ form_data.publications|default:'0' }}"
+                         class="form-control" style="width:90px;flex-shrink:0;"
+                         oninput="syncInput('pubInput','pubRange')">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="calc-btn" id="calcBtn">
+          <i class="bi bi-calculator-fill"></i>Calculate Acceptance Rate
+        </button>
+        <p style="font-size:.74rem;color:var(--db-text-3);margin-top:.75rem;">
+          <i class="bi bi-info-circle me-1"></i>
+          Estimate only. Actual admission depends on many additional factors.
+        </p>
+      </form>
+    </div>
+
+    <!-- ════════════ RIGHT: RESULT ════════════ -->
+    <div class="result-panel">
+      <div class="calc-card">
+
+        {% if result %}
+
+          {% if result.error %}
+            <div class="calc-error">
+              <i class="bi bi-exclamation-triangle-fill" style="flex-shrink:0;margin-top:.1rem;"></i>
+              <div>
+                <strong>Calculation error</strong><br>
+                {{ result.error }}
+              </div>
+            </div>
+
+          {% else %}
+            <!-- Gauge -->
+            <div class="gauge-wrap">
+              <svg class="gauge-svg" viewBox="0 0 200 120">
+                <!-- Track arc (half circle) -->
+                <path class="gauge-track"
+                      d="M 20 110 A 80 80 0 0 1 180 110" />
+                <!-- Fill arc -->
+                <path class="gauge-fill" id="gaugeFill"
+                      d="M 20 110 A 80 80 0 0 1 180 110"
+                      style="stroke:{{ result.tier_color }};" />
+                <!-- Center text -->
+                <text class="gauge-pct" x="100" y="88"
+                      style="fill:{{ result.tier_color }};">{{ result.probability }}%</text>
+                <text class="gauge-label" x="100" y="108">Acceptance Rate</text>
+              </svg>
+
+              <span class="tier-badge"
+                    style="color:{{ result.tier_color }};border-color:{{ result.tier_color }};background:{{ result.tier_color }}18;">
+                {% if result.tier == 'Strong' %}
+                  <i class="bi bi-check-circle-fill"></i>
+                {% elif result.tier == 'Moderate' %}
+                  <i class="bi bi-dash-circle-fill"></i>
+                {% else %}
+                  <i class="bi bi-exclamation-circle-fill"></i>
+                {% endif %}
+                {{ result.tier }} Chance
+              </span>
+            </div>
+
+            <!-- Score breakdown bars -->
+            <div class="score-bars">
+              <p class="section-label" style="margin-bottom:.6rem;">Score Breakdown</p>
+              <div class="score-bar-row">
+                <span class="score-bar-label">GPA</span>
+                <div class="score-bar-track">
+                  <div class="score-bar-fill" style="width:{{ result.gpa_normalized }}%;"></div>
+                </div>
+                <span class="score-bar-val">{{ result.gpa_normalized }}%</span>
+              </div>
+              <div class="score-bar-row">
+                <span class="score-bar-label">IELTS</span>
+                <div class="score-bar-track">
+                  <div class="score-bar-fill" style="width:{{ result.ielts_normalized }}%;"></div>
+                </div>
+                <span class="score-bar-val">{{ result.ielts_normalized }}%</span>
+              </div>
+              <div class="score-bar-row">
+                <span class="score-bar-label">Academic</span>
+                <div class="score-bar-track">
+                  <div class="score-bar-fill" style="width:{{ result.academic_score }}%;"></div>
+                </div>
+                <span class="score-bar-val">{{ result.academic_score }}%</span>
+              </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="tips-section">
+              <p class="section-label" style="margin-bottom:.5rem;">Improvement Tips</p>
+              {% if result.tips %}
+                {% for tip in result.tips %}
+                  <div class="tip-item">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <span>{{ tip }}</span>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="tip-success">
+                  <i class="bi bi-trophy-fill me-2"></i>Your profile looks very competitive! Keep it up.
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Info chips -->
+            <div class="info-chips">
+              <span class="info-chip"><i class="bi bi-robot"></i>ML model</span>
+              <span class="info-chip"><i class="bi bi-shield-check"></i>Logistic Regression</span>
+              <span class="info-chip"><i class="bi bi-building"></i>8 universities</span>
+              <span class="info-chip"><i class="bi bi-book"></i>6 majors</span>
+            </div>
+
+          {% endif %}
+
+        {% else %}
+          <!-- Empty state -->
+          <div class="result-empty">
+            <div class="re-icon"><i class="bi bi-graph-up-arrow"></i></div>
+            <p class="section-label" style="margin:0;border:none;">Your result will appear here</p>
+            <p>Fill in your academic profile on the left and hit <strong>Calculate</strong> to see your estimated acceptance probability.</p>
+          </div>
+
+          <!-- Static info chips -->
+          <div class="info-chips">
+            <span class="info-chip"><i class="bi bi-robot"></i>ML-powered</span>
+            <span class="info-chip"><i class="bi bi-building"></i>8 universities</span>
+            <span class="info-chip"><i class="bi bi-book"></i>6 majors</span>
+          </div>
+        {% endif %}
+
+      </div>
+
+      <!-- Disclaimer -->
+      <div style="margin-top:.9rem;padding:.75rem 1rem;background:var(--db-surface);border:1px solid var(--db-border);border-radius:12px;font-size:.74rem;color:var(--db-text-3);line-height:1.5;">
+        <i class="bi bi-info-circle me-1"></i>
+        <strong>Disclaimer:</strong> This estimate is generated by a machine learning model trained on sample data. It should not be used as the sole basis for application decisions. Actual acceptance depends on essays, recommendations, interviews, and yearly competition.
+      </div>
+    </div>
+
+  </div><!-- /.calc-grid -->
+</div>
+{% endblock %}
+
+{% block extra_db_js %}
+<script>
+(function () {
+
+  // ── Slider ↔ input sync ─────────────────────────────────────────────
+  function syncRange(rangeId, inputId) {
+    document.getElementById(inputId).value = document.getElementById(rangeId).value;
+  }
+  function syncInput(inputId, rangeId) {
+    document.getElementById(rangeId).value = document.getElementById(inputId).value;
+  }
+  window.syncRange = syncRange;
+  window.syncInput = syncInput;
+
+  // ── Gauge animation ─────────────────────────────────────────────────
+  const gaugeFill = document.getElementById('gaugeFill');
+  if (gaugeFill) {
+    // The arc path length for a half-circle of radius 80: π * r ≈ 251.3
+    const arcLen = Math.PI * 80; // ≈ 251.3
+
+    // Read the probability baked into the DOM
+    const pctText = document.querySelector('.gauge-pct');
+    const pct = pctText ? parseFloat(pctText.textContent) : 0;
+
+    const filled = (pct / 100) * arcLen;
+    const empty  = arcLen - filled;
+
+    // Animate from fully empty
+    gaugeFill.style.strokeDasharray  = `${arcLen}`;
+    gaugeFill.style.strokeDashoffset = `${arcLen}`;
+
+    requestAnimationFrame(() => {
+      gaugeFill.style.transition = 'stroke-dashoffset .9s cubic-bezier(.4,0,.2,1)';
+      gaugeFill.style.strokeDashoffset = `${empty}`;
+    });
+  }
+
+  // ── Submit loading ───────────────────────────────────────────────────
+  const form = document.getElementById('calcForm');
+  const btn  = document.getElementById('calcBtn');
+  if (form && btn) {
+    form.addEventListener('submit', () => {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Calculating…';
+    });
+  }
+
+})();
+</script>
+{% endblock %}

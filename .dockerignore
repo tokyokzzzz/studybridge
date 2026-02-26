@@ -1,0 +1,28 @@
+# Virtual environment — never copy into the image
+env/
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# SQLite dev database (Postgres is used in Docker)
+db.sqlite3
+
+# Git
+.git/
+.gitignore
+
+# Docker files themselves (no need to nest them)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# IDE / OS
+.idea/
+.vscode/
+*.DS_Store
+Thumbs.db
