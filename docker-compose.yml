@@ -24,7 +24,7 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8003:8000"
     volumes:
       # Persist user-uploaded media files across container rebuilds
       - media_files:/app/media
